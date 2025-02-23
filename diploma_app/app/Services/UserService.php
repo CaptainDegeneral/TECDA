@@ -60,4 +60,13 @@ class UserService
             return $user->update($data);
         });
     }
+
+    /**
+     * @param int $userId
+     * @return bool|null
+     */
+    public static function delete(int $userId): ?bool
+    {
+        return User::findOrFail($userId)->delete();
+    }
 }

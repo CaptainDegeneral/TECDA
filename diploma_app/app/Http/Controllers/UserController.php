@@ -11,6 +11,8 @@ use App\Repositories\UserRepository;
 use App\Services\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use LogicException;
+use Throwable;
 
 class UserController extends Controller
 {
@@ -75,7 +77,7 @@ class UserController extends Controller
                     'message' => __('messages.success.updated'),
                 ]
             ]);
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             return response()->json([
                 'data' => [
                     'success' => false,
@@ -91,6 +93,22 @@ class UserController extends Controller
      */
     public function destroy(DestroyUserRequest $request): JsonResponse
     {
-        //
+        try {
+            UserService::delete($request->id);
+
+            return response()->json([
+                'data' => [
+                    'success' => true,
+                    'message' => __('messages.success.deleted'),
+                ]
+            ]);
+        } catch (LogicException $exception) {
+            return response()->json([
+                'data' => [
+                    'success' => false,
+                    'message' => __('messages.errors.deleted'),
+                ]
+            ]);
+        }
     }
 }
