@@ -39,7 +39,7 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" value="Адрес электронной почты" />
 
                 <TextInput
                     id="email"
@@ -55,7 +55,7 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+                <InputLabel for="password" value="Пароль" />
 
                 <TextInput
                     id="password"
@@ -72,11 +72,20 @@ const submit = () => {
             <div class="mt-4 block">
                 <label class="flex items-center">
                     <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
+                    <span class="ms-2 text-sm text-gray-600"
+                        >Запомнить меня</span
+                    >
                 </label>
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
+            <div class="mt-4 flex items-center justify-between">
+                <Link
+                    :href="route('register')"
+                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                    Регистрация
+                </Link>
+
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
@@ -85,19 +94,12 @@ const submit = () => {
                     Забыли пароль?
                 </Link>
 
-                <Link
-                    :href="route('register')"
-                    class="rounded-md pl-3 text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Зарегистрироваться
-                </Link>
-
                 <PrimaryButton
-                    class="ms-4"
+                    class=""
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Войти
+                    Вход
                 </PrimaryButton>
             </div>
         </form>

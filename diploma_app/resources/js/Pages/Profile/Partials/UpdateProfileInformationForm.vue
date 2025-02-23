@@ -27,12 +27,11 @@ const form = useForm({
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Profile Information
-            </h2>
+            <h2 class="text-lg font-medium text-gray-900">Данные профиля</h2>
 
             <p class="mt-1 text-sm text-gray-600">
-                Update your account's profile information and email address.
+                Обновите информацию профиля и адрес электронной почты вашей
+                учетной записи.
             </p>
         </header>
 
@@ -104,14 +103,15 @@ const form = useForm({
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
                 <p class="mt-2 text-sm text-gray-800">
-                    Your email address is unverified.
+                    Ваш адрес электронной почты не подтверждён.
                     <Link
                         :href="route('verification.send')"
                         method="post"
                         as="button"
                         class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
-                        Click here to re-send the verification email.
+                        Нажмите здесь, чтобы отправить письмо с подтверждением
+                        повторно
                     </Link>
                 </p>
 
@@ -119,7 +119,7 @@ const form = useForm({
                     v-show="status === 'verification-link-sent'"
                     class="mt-2 text-sm font-medium text-green-600"
                 >
-                    A new verification link has been sent to your email address.
+                    Новая ссылка для подтверждения отправлена на ваш email.
                 </div>
             </div>
 
@@ -138,7 +138,7 @@ const form = useForm({
                         v-if="form.recentlySuccessful"
                         class="text-sm text-gray-600"
                     >
-                        Сохранено.
+                        Сохранено
                     </p>
                 </Transition>
             </div>

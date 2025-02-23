@@ -27,13 +27,13 @@ const submit = () => {
         <Head title="Register" />
 
         <form @submit.prevent="submit">
-            <div>
+            <div class="mt-4">
                 <InputLabel for="lastName" value="Фамилия" />
 
                 <TextInput
                     id="lastName"
                     type="text"
-                    class="mb-2 mt-1 block w-full"
+                    class="mb-2 block w-full"
                     v-model="form.lastName"
                     required
                     autofocus
@@ -41,13 +41,15 @@ const submit = () => {
                 />
 
                 <InputError class="mt-2" :message="form.errors.lastName" />
+            </div>
 
+            <div class="mt-4">
                 <InputLabel for="name" value="Имя" />
 
                 <TextInput
                     id="name"
                     type="text"
-                    class="mb-2 mt-1 block w-full"
+                    class="mb-2 block w-full"
                     v-model="form.name"
                     required
                     autofocus
@@ -55,13 +57,15 @@ const submit = () => {
                 />
 
                 <InputError class="mt-2" :message="form.errors.name" />
+            </div>
 
+            <div class="mt-4">
                 <InputLabel for="surname" value="Отчество" />
 
                 <TextInput
                     id="surname"
                     type="text"
-                    class="mb-2 mt-1 block w-full"
+                    class="mb-2 block w-full"
                     v-model="form.surname"
                     autofocus
                     autocomplete="surname"
@@ -71,7 +75,7 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" value="Адрес электронной почты" />
 
                 <TextInput
                     id="email"
@@ -103,7 +107,7 @@ const submit = () => {
             <div class="mt-4">
                 <InputLabel
                     for="password_confirmation"
-                    value="Подтвердите пароль"
+                    value="Подтверждение пароля"
                 />
 
                 <TextInput
@@ -121,12 +125,12 @@ const submit = () => {
                 />
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
+            <div class="mt-4 flex items-center justify-between">
                 <Link
                     :href="route('login')"
                     class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                    Уже зарегистрированы?
+                    Есть аккаунт?
                 </Link>
 
                 <PrimaryButton

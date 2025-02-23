@@ -35,7 +35,7 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    Главная страница
+                                    Главная
                                 </NavLink>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ const showingNavigationDropdown = ref(false);
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
-                            Главная страница
+                            Главная
                         </ResponsiveNavLink>
                     </div>
 
