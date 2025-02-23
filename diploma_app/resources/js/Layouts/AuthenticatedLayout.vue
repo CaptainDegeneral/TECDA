@@ -1,13 +1,17 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
+const page = usePage();
 const showingNavigationDropdown = ref(false);
+const user = computed(() => page.props.auth.user);
+
+const isAdmin = computed(() => user.value.role_id === 1);
 </script>
 
 <template>
@@ -36,6 +40,14 @@ const showingNavigationDropdown = ref(false);
                                     :active="route().current('dashboard')"
                                 >
                                     Главная
+                                </NavLink>
+
+                                <NavLink
+                                    v-if="isAdmin"
+                                    :href="route('admin')"
+                                    :active="route().current('admin')"
+                                >
+                                    Панель администрирования
                                 </NavLink>
                             </div>
                         </div>
