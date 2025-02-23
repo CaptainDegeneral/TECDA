@@ -21,10 +21,13 @@ Route::middleware(['auth'])->group(function () {
      */
     Route::controller(SubjectController::class)->name('subject.')->prefix('subjects')->group(function () {
        Route::get('/', 'index')->name('index');
-       Route::get('{subject}', 'show')->name('show');
-       Route::post('/', 'store')->name('store');
-       Route::put('{subject}', 'edit')->name('edit');
-       Route::delete('{subject}', 'destroy')->name('destroy');
+
+       Route::middleware(['admin'])->group(function () {
+           Route::get('{subject}', 'show')->name('show');
+           Route::post('/', 'store')->name('store');
+           Route::put('{subject}', 'edit')->name('edit');
+           Route::delete('{subject}', 'destroy')->name('destroy');
+       });
     });
 });
 
