@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,6 +30,21 @@ Route::middleware(['auth'])->group(function () {
            Route::delete('{subject}', 'destroy')->name('destroy');
        });
     });
+
+    /**
+     * Эндпоинты для CRUD-операций с пользователями
+     */
+    Route::controller(UserController::class)
+        ->middleware(['admin'])
+        ->name('user.')
+        ->prefix('users')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('{user}', 'show')->name('show');
+            Route::post('/', 'store')->name('store');
+            Route::put('{user}', 'edit')->name('edit');
+            Route::delete('{user}', 'destroy')->name('destroy');
+        });
 });
 
 require __DIR__.'/auth.php';
