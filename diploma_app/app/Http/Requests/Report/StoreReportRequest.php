@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Requests\User;
+namespace App\Http\Requests\Report;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules;
 
-class DestroyUserRequest extends FormRequest
+class StoreReportRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -12,6 +13,14 @@ class DestroyUserRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'data' => __('attributes.report.data'),
+            'user_id' => __('attributes.user.id'),
+        ];
     }
 
     /**
@@ -22,14 +31,8 @@ class DestroyUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id' => ['required', 'integer', 'exists:users,id'],
+            'data' => ['required', 'json'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
-    }
-
-    public function prepareForValidation()
-    {
-        return $this->merge([
-            'id' => $this->route('user'),
-        ]);
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +25,10 @@ Route::middleware(['auth'])->group(function () {
     /**
      * Эндпоинты для CRUD-операций с дисциплинами
      */
-    Route::controller(SubjectController::class)->name('subject.')->prefix('subjects')->group(function () {
+    Route::controller(SubjectController::class)
+        ->name('subject.')
+        ->prefix('subjects')
+        ->group(function () {
        Route::get('/', 'index')->name('index');
 
        Route::middleware(['admin'])->group(function () {
@@ -48,6 +52,17 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/', 'store')->name('store');
             Route::put('{user}', 'edit')->name('edit');
             Route::delete('{user}', 'destroy')->name('destroy');
+        });
+
+    Route::controller(ReportController::class)
+        ->name('report.')
+        ->prefix('reports')
+        ->group(function () {
+            Route::get('/', 'index',)->name('index');
+            Route::get('{report}', 'show')->name('show');
+            Route::post('/', 'store')->name('store');
+            Route::put('{report}', 'edit')->name('edit');
+            Route::delete('{report}', 'destroy')->name('destroy');
         });
 });
 

@@ -2,14 +2,14 @@
 
 namespace App\Http\Resources;
 
-use App\Models\User;
+use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin User
+ * @mixin Report
  */
-class UserResource extends JsonResource
+class ReportResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -20,15 +20,11 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'last_name' => $this->last_name,
-            'name' => $this->name,
-            'surname' => $this->surname,
-            'email' => $this->email,
-            'email_verified_at' => $this->whenHas('email_verified_at'),
+            'data' => $this->data,
+            'user_id' => $this->user_id,
+            'user' => new UserResource($this->whenLoaded('user')),
             'created_at' => $this->whenHas('created_at'),
             'updated_at' => $this->whenHas('updated_at'),
-            'role_id' => $this->whenHas('role_id'),
-            'role' => new RoleResource($this->whenLoaded('role')),
         ];
     }
 }
