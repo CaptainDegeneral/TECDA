@@ -47,7 +47,7 @@ const isAdmin = computed(() => user.value.role_id === 1);
                                     :href="route('admin')"
                                     :active="route().current('admin')"
                                 >
-                                    Панель администрирования
+                                    Администрирование
                                 </NavLink>
                             </div>
                         </div>

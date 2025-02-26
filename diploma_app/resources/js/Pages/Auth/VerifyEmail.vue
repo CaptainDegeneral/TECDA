@@ -23,7 +23,7 @@ const verificationLinkSent = computed(
 
 <template>
     <GuestLayout>
-        <Head title="Email Verification" />
+        <Head title="Подтверждение email" />
 
         <div class="mb-4 text-sm text-gray-600">
             Спасибо за регистрацию! Прежде чем начать, пожалуйста, подтвердите
