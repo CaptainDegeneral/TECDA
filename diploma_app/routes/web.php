@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +64,14 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/', 'store')->name('store');
             Route::put('{report}', 'edit')->name('edit');
             Route::delete('{report}', 'destroy')->name('destroy');
+        });
+
+    Route::middleware(['admin'])
+        ->controller(RoleController::class)
+        ->name('role.')
+        ->prefix('roles')
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
         });
 });
 

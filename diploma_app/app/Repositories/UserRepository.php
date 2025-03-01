@@ -3,16 +3,17 @@
 namespace App\Repositories;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserRepository
 {
     /**
-     * @return Collection
+     * @param string|null $searchValue
+     * @return LengthAwarePaginator
      */
-    public static function all(): Collection
+    public static function all(?string $searchValue): LengthAwarePaginator
     {
-        return User::with(['role:id,name'])->get([
+        $users = User::with(['role:id,name'])->select([
             'id',
             'last_name',
             'name',
@@ -21,6 +22,20 @@ class UserRepository
             'email_verified_at',
             'role_id',
         ]);
+
+        if ($searchValue) {
+            $users->where(function ($query) use ($searchValue) {
+                $query->where('last_name', 'like', "%$searchValue%")
+                    ->orWhere('name', 'like', "%$searchValue%")
+                    ->orWhere('surname', 'like', "%$searchValue%")
+                    ->orWhere('email', 'like', "%$searchValue%")
+                    ->orWhereHas('role', function ($roleQuery) use ($searchValue) {
+                        $roleQuery->whereLike('name', "%$searchValue%");
+                    });
+            });
+        }
+
+        return $users->paginate(10);
     }
 
     /**

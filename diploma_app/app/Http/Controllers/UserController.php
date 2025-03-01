@@ -11,17 +11,19 @@ use App\Repositories\UserRepository;
 use App\Services\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use LogicException;
 use Throwable;
 
 class UserController extends Controller
 {
     /**
+     * @param Request $request
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $users = UserRepository::all();
+        $users = UserRepository::all($request->search_value);
 
         return UserResource::collection($users)->response();
     }
