@@ -78,14 +78,12 @@ watch(
 <template>
     <modal :show="show">
         <div class="p-6">
-            <h2>Редактировать пользователя</h2>
+            <h2 class="text-lg font-medium text-gray-900">
+                Редактирование пользователя
+            </h2>
             <form @submit.prevent="submit">
-                <div class="mt-6">
-                    <input-label
-                        for="last_name"
-                        value="Фамилия"
-                        class="sr-only"
-                    />
+                <div class="mt-4">
+                    <input-label for="last_name" value="Фамилия" />
 
                     <text-input
                         id="last_name"
@@ -96,8 +94,8 @@ watch(
                     />
                 </div>
 
-                <div class="mt-6">
-                    <input-label for="name" value="Имя" class="sr-only" />
+                <div class="mt-4">
+                    <input-label for="name" value="Имя" />
 
                     <text-input
                         id="name"
@@ -108,12 +106,8 @@ watch(
                     />
                 </div>
 
-                <div class="mt-6">
-                    <input-label
-                        for="surname"
-                        value="Отчество"
-                        class="sr-only"
-                    />
+                <div class="mt-4">
+                    <input-label for="surname" value="Отчество" />
 
                     <text-input
                         id="surname"
@@ -124,8 +118,8 @@ watch(
                     />
                 </div>
 
-                <div class="mt-6">
-                    <input-label for="email" value="Email" class="sr-only" />
+                <div class="mt-4">
+                    <input-label for="email" value="Email" />
 
                     <text-input
                         id="email"
@@ -137,11 +131,10 @@ watch(
                     />
                 </div>
 
-                <div class="mt-6">
+                <div class="mt-4">
                     <input-label
                         for="password"
-                        value="Новый пароль"
-                        class="sr-only"
+                        value="Новый пароль (при необходимости)"
                     />
 
                     <text-input
@@ -150,15 +143,15 @@ watch(
                         type="password"
                         v-model="form.password"
                         class="mt-1 block w-full"
-                        placeholder="Новый пароль"
+                        placeholder=""
                     />
                 </div>
 
-                <div class="mt-6">
+                <div class="mt-4">
                     <role-select v-model="form.role_id"></role-select>
                 </div>
 
-                <div class="mb-6 mt-6">
+                <div class="mb-4 mt-4">
                     <label class="flex items-center">
                         <checkbox
                             id="verified"
@@ -173,7 +166,7 @@ watch(
                 </div>
 
                 <div class="flex flex-row">
-                    <primary-button type="submit" class="mr-4">
+                    <primary-button type="submit" class="mr-3">
                         Сохранить
                     </primary-button>
 

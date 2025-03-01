@@ -56,7 +56,9 @@ const closeModal = () => {
 <template>
     <modal :show="show">
         <div class="p-6">
-            <h2>Создать нового пользователя</h2>
+            <h2 class="text-lg font-medium text-gray-900">
+                Добавление нового пользователя
+            </h2>
             <form @submit.prevent="submit">
                 <div class="mt-6">
                     <input-label
@@ -139,7 +141,7 @@ const closeModal = () => {
                 <div class="flex flex-row">
                     <primary-button
                         type="submit"
-                        class="mr-4"
+                        class="mr-3"
                         :class="{ 'opacity-25': form.processing }"
                         :disabled="form.processing"
                     >

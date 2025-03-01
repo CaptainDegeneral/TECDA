@@ -19,17 +19,19 @@ onMounted(getRolesList);
 <template>
     <input-label for="role" value="Роль" class="sr-only" />
 
-    <select
-        id="role"
-        ref="role"
-        class="select select-primary"
-        v-model="modelValue"
-    >
-        <option disabled selected>Выберите роль</option>
-        <option v-for="role in roles" :key="role.id" :value="role.id">
-            {{ role.name }}
-        </option>
-    </select>
+    <div>
+        <input-label value="Выберите роль:"></input-label>
+        <select
+            id="role"
+            ref="role"
+            class="select select-primary mt-1"
+            v-model="modelValue"
+        >
+            <option v-for="role in roles" :key="role.id" :value="role.id">
+                {{ role.name }}
+            </option>
+        </select>
+    </div>
 </template>
 
 <style scoped></style>

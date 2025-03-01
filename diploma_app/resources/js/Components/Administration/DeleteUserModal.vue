@@ -35,10 +35,21 @@ const closeModal = () => {
 <template>
     <modal :show="show">
         <div class="p-6">
-            <h2>Удалить пользователя?</h2>
+            <h2 class="text-lg font-medium text-gray-900">
+                Удаление пользователя
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-600">
+                Удаление пользователя является безвозвратным процессом. После
+                подтверждения операции вся информация о пользователе будет
+                удалена навсегда.
+            </p>
+
             <form @submit.prevent="submit">
-                <danger-button type="submit"> Удалить </danger-button>
-                <secondary-button @click="closeModal">
+                <danger-button class="mt-6" type="submit">
+                    Удалить
+                </danger-button>
+                <secondary-button class="ms-3" @click="closeModal">
                     Отмена
                 </secondary-button>
             </form>

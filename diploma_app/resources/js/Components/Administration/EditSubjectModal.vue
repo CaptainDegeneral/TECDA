@@ -58,27 +58,30 @@ const closeModal = () => {
 <template>
     <modal :show="show">
         <div class="p-6">
-            <h2>Создать новую дисциплину</h2>
+            <h2 class="text-lg font-medium text-gray-900">
+                Редактирование дисциплины
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-600">
+                Для редактирования дисциплины можно изменить ее название и
+                кодовое обозначение. Обратите внимание, что изменения,
+                касающиеся производственной или учебной практики, потребуют
+                обязательного заполнения кодового обозначения.
+            </p>
             <form @submit.prevent="submit">
                 <div class="mt-6">
-                    <input-label for="name" value="Название" class="sr-only" />
-
+                    <input-label for="name" value="Название дисциплины" />
                     <text-input
                         id="name"
                         ref="name"
                         v-model="form.name"
                         class="mt-1 block w-full"
-                        placeholder="Название"
+                        placeholder="Название дисциплины"
                     />
                 </div>
 
                 <div class="mb-6 mt-6">
-                    <input-label
-                        for="code"
-                        value="Код дисциплины"
-                        class="sr-only"
-                    />
-
+                    <input-label for="code" value="Код дисциплины" />
                     <text-input
                         id="code"
                         ref="code"
