@@ -99,7 +99,7 @@ const selectedComponent = computed(() => {
                             <component :is="selectedComponent" />
                         </div>
                         <p
-                            class="my-10 w-full text-center text-2xl font-medium text-gray-500"
+                            class="mb-10 mt-16 w-full text-center text-2xl font-medium text-gray-500"
                             v-else
                         >
                             Пожалуйста, выберите вариант отчета для продолжения

@@ -1,8 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import SemesterTable from '@/Pages/Dashboard/PerfomancePage/SemesterTable.vue';
 
-// Состояние
+// Основные состояния
 const category = ref('');
 const yearsOfWork = ref(0);
 const startYear = ref(0);
@@ -14,8 +15,8 @@ const showIntermediateResults = ref(false);
 // Список дисциплин
 const disciplines = ref(['Математика', 'Физика', 'Информатика', 'История']);
 
-// Заголовки таблицы для семестров
-const semesterTableHeaders = ref([
+// Заголовки таблицы семестра
+const semesterTableHeaders = [
     'Дисциплина',
     'Группа',
     'Студентов',
@@ -25,13 +26,13 @@ const semesterTableHeaders = ref([
     'Оценок',
     'Успеваемость (%)',
     'Качество (%)',
-    '', // Пустой заголовок для колонки "Действия"
-]);
+    '', // для колонки "Действия"
+];
 
 // Данные вкладок
 const tabsData = ref([]);
 
-// Инициализация строки таблицы
+// Функция создания пустой строки таблицы
 const createEmptyRow = () => ({
     discipline: '',
     group: '',
@@ -41,7 +42,7 @@ const createEmptyRow = () => ({
     threes: 0,
 });
 
-// Генерация вкладок
+// Генерация вкладок (не более 5)
 const generateTabs = () => {
     const tabsCount = Math.min(yearsOfWork.value, 5);
     tabsData.value = Array.from({ length: tabsCount }, (_, index) => ({
@@ -51,7 +52,7 @@ const generateTabs = () => {
     }));
 };
 
-// Разблокирование конфигурирования
+// Разблокирование основной конфигурации
 const unlockMainConfiguration = () => {
     if (!category.value || yearsOfWork.value <= 0 || startYear.value <= 0) {
         alert('Пожалуйста, заполните все поля корректно.');
@@ -61,68 +62,90 @@ const unlockMainConfiguration = () => {
     isConfigured.value = true;
 };
 
-// Управление строками
-const addRow = (semester, tabIndex) =>
+// Функции управления строками
+const addRow = (semester, tabIndex) => {
     tabsData.value[tabIndex][semester].push(createEmptyRow());
-const deleteRow = (semester, tabIndex, rowIndex) =>
-    tabsData.value[tabIndex][semester].splice(rowIndex, 1);
-
-// Вычисления
-const calculateTotalGrades = (row) => row.fives + row.fours + row.threes;
-const calculatePerformance = (row) => {
-    const total = calculateTotalGrades(row);
-    return total === 0
-        ? 0
-        : (
-              ((row.fives * 5 + row.fours * 4 + row.threes * 3) / (total * 5)) *
-              100
-          ).toFixed(2);
 };
-const calculateQuality = (row) =>
-    row.students === 0
-        ? 0
-        : (((row.fives + row.fours) / row.students) * 100).toFixed(2);
+const deleteRow = (semester, tabIndex, rowIndex) => {
+    tabsData.value[tabIndex][semester].splice(rowIndex, 1);
+};
 
-// Промежуточные результаты
+// Вспомогательные функции вычислений с возвращением null вместо "0.00"
+const calculateTotalGrades = (row) => {
+    if (!row.discipline) return null;
+    const sum = row.fives + row.fours + row.threes;
+    return sum === 0 ? null : sum;
+};
+const calculatePerformance = (row) => {
+    if (!row.discipline) return null;
+    const total = calculateTotalGrades(row);
+    if (!total) return null;
+    return (
+        ((row.fives * 5 + row.fours * 4 + row.threes * 3) / (total * 5)) *
+        100
+    ).toFixed(2);
+};
+const calculateQuality = (row) => {
+    if (!row.discipline) return null;
+    if (row.students === 0) return null;
+    return (((row.fives + row.fours) / row.students) * 100).toFixed(2);
+};
+
+// Функции переключения видимости блоков
+const toggleIntermediateResults = () => {
+    showIntermediateResults.value = !showIntermediateResults.value;
+};
+const toggleFinalResults = () => {
+    showFinalResults.value = !showFinalResults.value;
+};
+
+// Вычисляем промежуточные результаты для каждой вкладки
 const intermediateResults = computed(() =>
     tabsData.value.map((tab) => {
         const allRows = [...tab.autumnWinter, ...tab.springSummer];
         const disciplineMap = {};
         allRows.forEach((row) => {
             if (!row.discipline) return;
-            disciplineMap[row.discipline] = disciplineMap[row.discipline] || {
-                performance: [],
-                quality: [],
-            };
+            if (!disciplineMap[row.discipline]) {
+                disciplineMap[row.discipline] = {
+                    performance: [],
+                    quality: [],
+                };
+            }
             const perf = parseFloat(calculatePerformance(row));
             const qual = parseFloat(calculateQuality(row));
-            if (!isNaN(perf))
+            if (!isNaN(perf) && perf !== null)
                 disciplineMap[row.discipline].performance.push(perf);
-            if (!isNaN(qual)) disciplineMap[row.discipline].quality.push(qual);
+            if (!isNaN(qual) && qual !== null)
+                disciplineMap[row.discipline].quality.push(qual);
         });
-        return Object.entries(disciplineMap).map(([discipline, data]) => ({
-            discipline,
-            performance: (
-                data.performance.reduce((sum, val) => sum + val, 0) /
-                    data.performance.length || 0
-            ).toFixed(2),
-            quality: (
-                data.quality.reduce((sum, val) => sum + val, 0) /
-                    data.quality.length || 0
-            ).toFixed(2),
+        return Object.entries(disciplineMap).map(([disc, data]) => ({
+            discipline: disc,
+            performance: data.performance.length
+                ? (
+                      data.performance.reduce((sum, val) => sum + val, 0) /
+                      data.performance.length
+                  ).toFixed(2)
+                : null,
+            quality: data.quality.length
+                ? (
+                      data.quality.reduce((sum, val) => sum + val, 0) /
+                      data.quality.length
+                  ).toFixed(2)
+                : null,
         }));
     }),
 );
 
-// Конечные результаты
+// Вычисляем конечные результаты по всем дисциплинам
 const finalResults = computed(() => {
-    const disciplinesSet = new Set(
-        tabsData.value.flatMap((_, index) =>
-            intermediateResults.value[index].map((r) => r.discipline),
-        ),
-    );
-    const disciplinesList = [...disciplinesSet];
-
+    const allDisciplines = new Set();
+    intermediateResults.value.forEach((tabResults) => {
+        tabResults.forEach((result) => {
+            allDisciplines.add(result.discipline);
+        });
+    });
+    const disciplinesList = Array.from(allDisciplines);
     const createTable = (prop) =>
         disciplinesList.map((discipline) => {
             const row = { discipline };
@@ -130,24 +153,67 @@ const finalResults = computed(() => {
                 const result = intermediateResults.value[index].find(
                     (r) => r.discipline === discipline,
                 );
-                row[tab.label] = result ? result[prop] : '-';
+                row[tab.label] = result ? result[prop] : null;
             });
             return row;
         });
-
     return {
         performanceTable: createTable('performance'),
         qualityTable: createTable('quality'),
     };
 });
 
-// Переключение видимости
-const toggleFinalResults = () => {
-    showFinalResults.value = !showFinalResults.value;
+// Функция для замены пустых значений на null
+const sanitizeData = (data) => {
+    if (data === undefined) return null;
+    if (typeof data === 'string' && data.trim() === '') return null;
+    if (Array.isArray(data)) return data.map(sanitizeData);
+    if (data !== null && typeof data === 'object') {
+        const sanitized = {};
+        Object.keys(data).forEach((key) => {
+            sanitized[key] = sanitizeData(data[key]);
+        });
+        return sanitized;
+    }
+    return data;
 };
-const toggleIntermediateResults = () => {
-    showIntermediateResults.value = !showIntermediateResults.value;
+
+// Функция для получения данных с вычисляемыми колонками для каждой строки
+const getEnhancedTabsData = () => {
+    return tabsData.value.map((tab) => ({
+        ...tab,
+        autumnWinter: tab.autumnWinter.map((row) => ({
+            ...row,
+            totalGrades: calculateTotalGrades(row),
+            performance: calculatePerformance(row),
+            quality: calculateQuality(row),
+        })),
+        springSummer: tab.springSummer.map((row) => ({
+            ...row,
+            totalGrades: calculateTotalGrades(row),
+            performance: calculatePerformance(row),
+            quality: calculateQuality(row),
+        })),
+    }));
 };
+
+// Функция для сбора всех данных в JSON
+const collectAllData = () => {
+    const data = {
+        configuration: {
+            category: category.value || null,
+            yearsOfWork: yearsOfWork.value > 0 ? yearsOfWork.value : null,
+            startYear: startYear.value > 0 ? startYear.value : null,
+        },
+        tabsData: getEnhancedTabsData(),
+        intermediateResults: intermediateResults.value,
+        finalResults: finalResults.value,
+    };
+    return JSON.stringify(sanitizeData(data), null, 2);
+};
+
+// Привязываем результат сбора данных к computed для отображения в шаблоне (например, в <pre>)
+const collectedData = computed(() => collectAllData());
 </script>
 
 <template>
@@ -219,7 +285,6 @@ const toggleIntermediateResults = () => {
                     {{ tab.label }}
                 </button>
             </div>
-
             <div
                 v-for="(tab, tabIndex) in tabsData"
                 :key="tabIndex"
@@ -227,216 +292,29 @@ const toggleIntermediateResults = () => {
                 class="mt-6"
             >
                 <!-- Осенне-зимний семестр -->
-                <div class="mb-6">
-                    <div class="mb-4 flex items-center justify-start">
-                        <h3 class="text-lg font-medium text-gray-700">
-                            Осенне-зимний семестр
-                        </h3>
-                        <button
-                            @click="addRow('autumnWinter', tabIndex)"
-                            class="btn btn-primary btn-soft btn-sm ml-4"
-                        >
-                            Добавить строку
-                        </button>
-                    </div>
-                    <table class="table w-full">
-                        <thead>
-                            <tr>
-                                <th
-                                    v-for="(
-                                        header, index
-                                    ) in semesterTableHeaders"
-                                    :key="index"
-                                >
-                                    {{ header }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="(row, rowIndex) in tab.autumnWinter"
-                                :key="rowIndex"
-                            >
-                                <td>
-                                    <select
-                                        v-model="row.discipline"
-                                        class="select-bordered select w-full"
-                                    >
-                                        <option value="">Выберите</option>
-                                        <option
-                                            v-for="d in disciplines"
-                                            :value="d"
-                                            :key="d"
-                                        >
-                                            {{ d }}
-                                        </option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input
-                                        v-model="row.group"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        v-model.number="row.students"
-                                        type="number"
-                                        min="0"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        v-model.number="row.fives"
-                                        type="number"
-                                        min="0"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        v-model.number="row.fours"
-                                        type="number"
-                                        min="0"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        v-model.number="row.threes"
-                                        type="number"
-                                        min="0"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>{{ calculateTotalGrades(row) }}</td>
-                                <td>{{ calculatePerformance(row) }}</td>
-                                <td>{{ calculateQuality(row) }}</td>
-                                <td>
-                                    <button
-                                        @click="
-                                            deleteRow(
-                                                'autumnWinter',
-                                                tabIndex,
-                                                rowIndex,
-                                            )
-                                        "
-                                        class="btn btn-error btn-soft btn-sm"
-                                    >
-                                        Удалить
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
+                <SemesterTable
+                    :rows="tab.autumnWinter"
+                    :tabIndex="tabIndex"
+                    semesterKey="autumnWinter"
+                    :disciplines="disciplines"
+                    :tableHeaders="semesterTableHeaders"
+                    @addRow="addRow"
+                    @deleteRow="deleteRow"
+                >
+                    <template #title>Осенне-зимний семестр</template>
+                </SemesterTable>
                 <!-- Весенне-летний семестр -->
-                <div>
-                    <div class="mb-4 flex items-center justify-start">
-                        <h3 class="text-lg font-medium text-gray-700">
-                            Весенне-летний семестр
-                        </h3>
-                        <button
-                            @click="addRow('springSummer', tabIndex)"
-                            class="btn btn-primary btn-soft btn-sm ml-4"
-                        >
-                            Добавить строку
-                        </button>
-                    </div>
-                    <table class="table w-full">
-                        <thead>
-                            <tr>
-                                <th
-                                    v-for="(
-                                        header, index
-                                    ) in semesterTableHeaders"
-                                    :key="index"
-                                >
-                                    {{ header }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="(row, rowIndex) in tab.springSummer"
-                                :key="rowIndex"
-                            >
-                                <td>
-                                    <select
-                                        v-model="row.discipline"
-                                        class="select-bordered select w-full"
-                                    >
-                                        <option value="">Выберите</option>
-                                        <option
-                                            v-for="d in disciplines"
-                                            :value="d"
-                                            :key="d"
-                                        >
-                                            {{ d }}
-                                        </option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input
-                                        v-model="row.group"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        v-model.number="row.students"
-                                        type="number"
-                                        min="0"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        v-model.number="row.fives"
-                                        type="number"
-                                        min="0"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        v-model.number="row.fours"
-                                        type="number"
-                                        min="0"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        v-model.number="row.threes"
-                                        type="number"
-                                        min="0"
-                                        class="input-bordered input w-full"
-                                    />
-                                </td>
-                                <td>{{ calculateTotalGrades(row) }}</td>
-                                <td>{{ calculatePerformance(row) }}</td>
-                                <td>{{ calculateQuality(row) }}</td>
-                                <td>
-                                    <button
-                                        @click="
-                                            deleteRow(
-                                                'springSummer',
-                                                tabIndex,
-                                                rowIndex,
-                                            )
-                                        "
-                                        class="btn btn-error btn-soft btn-sm"
-                                    >
-                                        Удалить
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <SemesterTable
+                    :rows="tab.springSummer"
+                    :tabIndex="tabIndex"
+                    semesterKey="springSummer"
+                    :disciplines="disciplines"
+                    :tableHeaders="semesterTableHeaders"
+                    @addRow="addRow"
+                    @deleteRow="deleteRow"
+                >
+                    <template #title>Весенне-летний семестр</template>
+                </SemesterTable>
             </div>
         </section>
 
@@ -584,7 +462,17 @@ const toggleIntermediateResults = () => {
                 </div>
             </div>
         </section>
+
+        <!-- Вывод JSON для отладки -->
+        <section class="mt-8">
+            <h2 class="mb-4 text-xl font-semibold text-gray-900">
+                Собранные данные (JSON)
+            </h2>
+            <pre class="rounded bg-gray-100 p-4">{{ collectedData }}</pre>
+        </section>
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Добавьте стили при необходимости */
+</style>
