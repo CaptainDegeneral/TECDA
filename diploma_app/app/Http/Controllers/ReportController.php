@@ -42,9 +42,11 @@ class ReportController extends Controller
     {
         $report = ReportRepository::get($request->id);
         $accessResponse = $this->checkAccess($report);
+
         if ($accessResponse) {
             return $accessResponse;
         }
+
         return new ReportResource($report)->response();
     }
 
@@ -58,6 +60,7 @@ class ReportController extends Controller
         $userId = $request->user_id ?? $user->id;
 
         $accessResponse = $this->checkAccess($userId);
+
         if ($accessResponse) {
             return $accessResponse;
         }
@@ -76,7 +79,7 @@ class ReportController extends Controller
                     'success' => false,
                     'message' => __('messages.errors.created'),
                 ],
-            ], 500);
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -106,7 +109,7 @@ class ReportController extends Controller
                     'success' => false,
                     'message' => __('messages.errors.updated'),
                 ],
-            ], 500);
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -118,6 +121,7 @@ class ReportController extends Controller
     {
         $report = ReportRepository::get($request->id);
         $accessResponse = $this->checkAccess($report);
+
         if ($accessResponse) {
             return $accessResponse;
         }
@@ -136,12 +140,13 @@ class ReportController extends Controller
                     'success' => false,
                     'message' => __('messages.errors.deleted'),
                 ],
-            ], 500);
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
      * Проверка прав доступа
+     *
      * @param $target
      * @return JsonResponse|null
      */
@@ -156,7 +161,7 @@ class ReportController extends Controller
                     'success' => false,
                     'message' => __('messages.errors.unauthorized'),
                 ]
-            ], 403);
+            ], JsonResponse::HTTP_FORBIDDEN);
         }
 
         return null;

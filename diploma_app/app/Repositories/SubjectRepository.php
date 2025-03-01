@@ -4,17 +4,26 @@ namespace App\Repositories;
 
 use App\Models\Subject;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class SubjectRepository
 {
     /**
      * Получение всех дисциплин
      *
-     * @return Collection
+     * @param string|null $subjectProperty
+     * @return LengthAwarePaginator
      */
-    public static function all(): Collection
+    public static function all(?string $subjectProperty = null): LengthAwarePaginator
     {
-        return Subject::get(['code', 'name']);
+        $subject = Subject::select(['id', 'code', 'name']);
+
+        if ($subjectProperty) {
+            $subject->whereLike('name', "%$subjectProperty%")
+                ->orWhereLike('code', "%$subjectProperty%");
+        }
+
+        return $subject->orderBy('name')->paginate(10);
     }
 
     /**

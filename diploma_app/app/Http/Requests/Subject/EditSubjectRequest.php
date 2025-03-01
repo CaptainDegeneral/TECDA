@@ -3,7 +3,11 @@
 namespace App\Http\Requests\Subject;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
+/**
+ * @property int $id
+ */
 class EditSubjectRequest extends FormRequest
 {
     /**
@@ -32,8 +36,8 @@ class EditSubjectRequest extends FormRequest
     {
         return [
             'id' => ['required', 'integer', 'exists:subjects,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('subjects', 'name')->ignore($this->id)],
+            'code' => ['nullable', 'string', 'max:100'],
         ];
     }
 

@@ -11,16 +11,18 @@ use App\Repositories\SubjectRepository;
 use App\Services\SubjectService;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use LogicException;
 
 class SubjectController extends Controller
 {
     /**
+     * @param Request $request
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $subjects = SubjectRepository::all();
+        $subjects = SubjectRepository::all($request->query('search_value'));
 
         return SubjectResource::collection($subjects)->response();
     }
