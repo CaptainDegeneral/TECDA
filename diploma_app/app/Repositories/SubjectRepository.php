@@ -27,6 +27,28 @@ class SubjectRepository
     }
 
     /**
+     * @return Collection
+     */
+    public static function getAllWithoutPagination(): Collection
+    {
+        $subjects = Subject::get([
+            'id',
+            'code',
+            'name',
+        ]);
+
+        $subjects = $subjects->map(function ($subject) {
+            $subject->code_name = $subject->code . ' ' . $subject->name;
+            return $subject;
+        });
+
+        $sorted = $subjects->sortByDesc('code_name');
+
+        return $sorted->values();
+    }
+
+
+    /**
      * @param int $id
      * @return Subject|null
      */

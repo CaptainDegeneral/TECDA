@@ -67,6 +67,7 @@ class ReportController extends Controller
 
         try {
             ReportService::create($request);
+
             return response()->json([
                 'data' => [
                     'success' => true,

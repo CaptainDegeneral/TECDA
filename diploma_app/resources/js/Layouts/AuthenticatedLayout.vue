@@ -43,6 +43,13 @@ const isAdmin = computed(() => user.value.role_id === 1);
                                 </NavLink>
 
                                 <NavLink
+                                    :href="route('user-reports')"
+                                    :active="route().current('user-reports')"
+                                >
+                                    Мои отчеты
+                                </NavLink>
+
+                                <NavLink
                                     v-if="isAdmin"
                                     :href="route('admin')"
                                     :active="route().current('admin')"

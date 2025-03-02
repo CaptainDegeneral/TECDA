@@ -4,10 +4,11 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { reactive, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import RoleSelect from '@/Components/Administration/RoleSelect.vue';
 import { editUser, getUser } from '@/api/users.js';
 import Checkbox from '@/Components/Checkbox.vue';
+import NProgress from 'nprogress';
 
 const emit = defineEmits(['closeModal', 'edited']);
 
@@ -31,8 +32,13 @@ const form = reactive({
     verified: false,
 });
 
+const loading = ref(false);
+
 const submit = async () => {
     try {
+        NProgress.start();
+        loading.value = true;
+
         await editUser(props.id, form);
 
         emit('edited');
@@ -40,6 +46,9 @@ const submit = async () => {
         closeModal();
     } catch (exception) {
         console.log(exception.response.data.message);
+    } finally {
+        NProgress.done();
+        loading.value = false;
     }
 };
 
@@ -166,11 +175,16 @@ watch(
                 </div>
 
                 <div class="flex flex-row">
-                    <primary-button type="submit" class="mr-3">
+                    <primary-button
+                        type="submit"
+                        class="mr-3"
+                        :class="{ 'opacity-25': loading }"
+                        :disabled="loading"
+                    >
                         Сохранить
                     </primary-button>
 
-                    <secondary-button @click="closeModal">
+                    <secondary-button @click="closeModal" :disabled="loading">
                         Отмена
                     </secondary-button>
                 </div>

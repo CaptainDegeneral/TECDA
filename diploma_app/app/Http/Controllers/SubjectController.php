@@ -28,6 +28,16 @@ class SubjectController extends Controller
     }
 
     /**
+     * @return JsonResponse
+     */
+    public function getList(): JsonResponse
+    {
+        $subjects = SubjectRepository::getAllWithoutPagination();
+
+        return SubjectResource::collection($subjects)->response();
+    }
+
+    /**
      * @param ShowSubjectRequest $request
      * @return JsonResponse
      */

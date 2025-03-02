@@ -13,9 +13,11 @@ class ReportRepository
      */
     public static function all(): Collection
     {
-        return Report::with('user:id,last_name,name,surname,email')->get([
+        return Report::with('user:id,last_name,name,surname,email')
+            ->orderByDesc('created_at')
+            ->get([
             'id',
-            'data',
+            'name',
             'user_id',
             'created_at',
             'updated_at'
@@ -29,13 +31,20 @@ class ReportRepository
      */
     public static function get(int $id): Report
     {
-        return Report::with('user:id,last_name,name,surname,email')->select([
+        $report = Report::with('user:id,last_name,name,surname,email')->select([
             'id',
+            'name',
             'data',
             'user_id',
             'created_at',
             'updated_at'
         ])->find($id);
+
+        if ($report && $report->data) {
+            $report->data = json_decode($report->data, true);
+        }
+
+        return $report;
     }
 
     /**
@@ -47,7 +56,8 @@ class ReportRepository
     {
         return Report::with('user:id,last_name,name,surname,email')
             ->where('user_id', $userId)
-            ->get(['id', 'data', 'user_id', 'created_at', 'updated_at']);
+            ->orderByDesc('created_at')
+            ->get(['id', 'name', 'user_id', 'created_at', 'updated_at']);
     }
 
     /**

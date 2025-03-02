@@ -9,6 +9,10 @@ const getAllSubjects = async (page, searchValue) => {
     );
 };
 
+const getSubjectsCodeList = async () => {
+    return await axios.get(route('subject.list'));
+};
+
 const getSubject = async (id) => {
     return await axios.get(
         route('subject.show', {
@@ -50,4 +54,5 @@ export {
     editSubject,
     getAllSubjects,
     getSubject,
+    getSubjectsCodeList,
 };

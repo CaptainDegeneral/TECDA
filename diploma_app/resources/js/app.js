@@ -1,12 +1,16 @@
+import 'nprogress/nprogress.css';
 import '../css/app.css';
 import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import NProgress from 'nprogress';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+NProgress.configure({ showSpinner: false });
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -22,6 +26,6 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#4B5563',
+        color: '#006aff',
     },
 });

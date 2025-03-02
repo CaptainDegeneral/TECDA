@@ -7,6 +7,7 @@ import { getUsers } from '@/api/users.js';
 import CreateUserModal from '@/Components/Administration/CreateUserModal.vue';
 import EditUserModal from '@/Components/Administration/EditUserModal.vue';
 import DeleteUserModal from '@/Components/Administration/DeleteUserModal.vue';
+import NProgress from 'nprogress';
 
 const searchValue = ref('');
 const users = ref();
@@ -19,9 +20,13 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 
 const getUsersList = async () => {
+    NProgress.start();
+
     const response = await getUsers(currentPage.value, searchValue.value);
     users.value = response.data.data;
     pagination.value = response.data.meta;
+
+    NProgress.done();
 };
 
 const changePage = async (page) => {

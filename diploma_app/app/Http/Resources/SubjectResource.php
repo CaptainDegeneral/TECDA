@@ -20,8 +20,9 @@ class SubjectResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'code' => $this->code,
+            'name' => $this->whenHas('name'),
+            'code' => $this->whenHas('code'),
+            'code_name' => $this->whenHas('code_name'),
             'created_at' => $this->whenHas('created_at'),
             'updated_at' => $this->whenHas('updated_at'),
         ];

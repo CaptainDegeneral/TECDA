@@ -1,7 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import SemesterTable from '@/Pages/Dashboard/PerfomancePage/SemesterTable.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { createReport } from '@/api/reports.js';
+import NProgress from 'nprogress';
+import { getSubjectsCodeList } from '@/api/subjects.js';
 
 // Основные состояния
 const category = ref('');
@@ -13,7 +17,7 @@ const showFinalResults = ref(false);
 const showIntermediateResults = ref(false);
 
 // Список дисциплин
-const disciplines = ref(['Математика', 'Физика', 'Информатика', 'История']);
+const disciplines = ref();
 
 // Заголовки таблицы семестра
 const semesterTableHeaders = [
@@ -105,22 +109,29 @@ const intermediateResults = computed(() =>
         const allRows = [...tab.autumnWinter, ...tab.springSummer];
         const disciplineMap = {};
         allRows.forEach((row) => {
-            if (!row.discipline) return;
-            if (!disciplineMap[row.discipline]) {
-                disciplineMap[row.discipline] = {
-                    performance: [],
-                    quality: [],
-                };
+            // Извлекаем code_name из объекта discipline, если он существует
+            const discKey = row.discipline ? row.discipline.code_name : null;
+            if (discKey) {
+                // Инициализируем запись для данной дисциплины, если её ещё нет
+                if (!disciplineMap[discKey]) {
+                    disciplineMap[discKey] = {
+                        performance: [],
+                        quality: [],
+                    };
+                }
+                // Вычисляем успеваемость и качество
+                const perf = parseFloat(calculatePerformance(row));
+                const qual = parseFloat(calculateQuality(row));
+                // Добавляем значения, если они корректны
+                if (!isNaN(perf) && perf !== null)
+                    disciplineMap[discKey].performance.push(perf);
+                if (!isNaN(qual) && qual !== null)
+                    disciplineMap[discKey].quality.push(qual);
             }
-            const perf = parseFloat(calculatePerformance(row));
-            const qual = parseFloat(calculateQuality(row));
-            if (!isNaN(perf) && perf !== null)
-                disciplineMap[row.discipline].performance.push(perf);
-            if (!isNaN(qual) && qual !== null)
-                disciplineMap[row.discipline].quality.push(qual);
         });
-        return Object.entries(disciplineMap).map(([disc, data]) => ({
-            discipline: disc,
+        // Преобразуем disciplineMap в массив объектов для таблицы
+        return Object.entries(disciplineMap).map(([discKey, data]) => ({
+            discipline: discKey, // discKey — это code_name
             performance: data.performance.length
                 ? (
                       data.performance.reduce((sum, val) => sum + val, 0) /
@@ -214,10 +225,38 @@ const collectAllData = () => {
 
 // Привязываем результат сбора данных к computed для отображения в шаблоне (например, в <pre>)
 const collectedData = computed(() => collectAllData());
+
+const loading = ref(false);
+
+const getSubjectsList = async () => {
+    const { data } = await getSubjectsCodeList();
+
+    disciplines.value = data;
+};
+
+const saveReport = async () => {
+    try {
+        NProgress.start();
+        loading.value = true;
+
+        await createReport(
+            null,
+            collectedData.value,
+            'Успеваемость и качество образования',
+        );
+    } catch (exception) {
+        //
+    } finally {
+        NProgress.done();
+        loading.value = false;
+    }
+};
+
+onMounted(getSubjectsList);
 </script>
 
 <template>
-    <div class="py-8">
+    <div class="py-8" :class="{ 'pointer-events-none opacity-50': loading }">
         <!-- Начальное конфигурирование -->
         <section class="mb-12">
             <h2 class="mb-6 text-2xl font-semibold text-gray-900">
@@ -255,6 +294,7 @@ const collectedData = computed(() => collectAllData());
                 </div>
                 <div class="flex items-end">
                     <button
+                        type="button"
                         @click="unlockMainConfiguration"
                         class="btn btn-primary w-full"
                     >
@@ -391,7 +431,7 @@ const collectedData = computed(() => collectAllData());
                     {{ showFinalResults ? 'Скрыть' : 'Показать' }}
                 </button>
             </div>
-            <div v-if="showFinalResults">
+            <div class="mb-6" v-if="showFinalResults">
                 <div class="mb-6">
                     <h3 class="mb-4 text-lg font-medium text-gray-700">
                         Успеваемость
@@ -461,6 +501,10 @@ const collectedData = computed(() => collectAllData());
                     </table>
                 </div>
             </div>
+
+            <primary-button type="submit" @click.prevent="saveReport">
+                Сохранить отчёт
+            </primary-button>
         </section>
 
         <!-- Вывод JSON для отладки -->
@@ -473,6 +517,4 @@ const collectedData = computed(() => collectAllData());
     </div>
 </template>
 
-<style scoped>
-/* Добавьте стили при необходимости */
-</style>
+<style scoped></style>

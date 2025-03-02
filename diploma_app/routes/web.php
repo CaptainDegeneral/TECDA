@@ -12,6 +12,10 @@ Route::get('/', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('user-reports', function () {
+    return Inertia::render('Dashboard/ReportsPage');
+})->middleware(['auth', 'verified'])->name('user-reports');
+
 Route::get('admin', function () {
     return Inertia::render('Administration');
 })->middleware(['auth', 'verified', 'admin'])->name('admin');
@@ -38,6 +42,9 @@ Route::middleware(['auth'])->group(function () {
            Route::put('{subject}', 'edit')->name('edit');
            Route::delete('{subject}', 'destroy')->name('destroy');
        });
+
+       // Остальные
+       Route::get('get/list', 'getList')->name('list');
     });
 
     /**

@@ -16,7 +16,11 @@ class ReportService
     public static function create(StoreReportRequest $request): Report
     {
         return ReportRepository::create([
-            'data' => $request->data,
+            'name' => $request->name,
+            'data' => json_encode(
+                $request->data,
+                JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION,
+            ),
             'user_id' => $request->user_id ?? auth()->id(),
         ]);
     }

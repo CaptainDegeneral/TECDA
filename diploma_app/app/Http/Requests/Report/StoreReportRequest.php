@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Report;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules;
 
 class StoreReportRequest extends FormRequest
 {
@@ -18,6 +17,7 @@ class StoreReportRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'name' => __('attributes.report.name'),
             'data' => __('attributes.report.data'),
             'user_id' => __('attributes.user.id'),
         ];
@@ -31,6 +31,7 @@ class StoreReportRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'name' => ['required', 'string'],
             'data' => ['required', 'json'],
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ];

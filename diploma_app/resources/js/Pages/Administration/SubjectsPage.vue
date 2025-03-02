@@ -7,6 +7,7 @@ import CreateSubjectModal from '@/Components/Administration/CreateSubjectModal.v
 import EditSubjectModal from '@/Components/Administration/EditSubjectModal.vue';
 import DeleteSubjectModal from '@/Components/Administration/DeleteSubjectModal.vue';
 import TextInput from '@/Components/TextInput.vue';
+import NProgress from 'nprogress';
 
 const searchValue = ref('');
 const subjects = ref();
@@ -19,9 +20,13 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 
 const getSubjectsList = async () => {
+    NProgress.start();
+
     const response = await getAllSubjects(currentPage.value, searchValue.value);
     subjects.value = response.data.data;
     pagination.value = response.data.meta;
+
+    NProgress.done();
 };
 
 const changePage = async (page) => {

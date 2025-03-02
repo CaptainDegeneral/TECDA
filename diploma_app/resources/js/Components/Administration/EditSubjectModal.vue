@@ -4,8 +4,9 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { reactive, watch } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { editSubject, getSubject } from '@/api/subjects.js';
+import NProgress from 'nprogress';
 
 const emit = defineEmits(['closeModal', 'edited']);
 
@@ -24,14 +25,22 @@ const form = reactive({
     code: null,
 });
 
+const loading = ref(false);
+
 const submit = async () => {
     try {
+        NProgress.start();
+        loading.value = true;
+
         await editSubject(props.id, form);
 
         emit('edited');
         closeModal();
     } catch (exception) {
         console.log(exception.response.data.message);
+    } finally {
+        NProgress.done();
+        loading.value = false;
     }
 };
 
@@ -95,13 +104,13 @@ const closeModal = () => {
                     <primary-button
                         type="submit"
                         class="mr-4"
-                        :class="{ 'opacity-25': form.processing }"
-                        :disabled="form.processing"
+                        :class="{ 'opacity-25': loading }"
+                        :disabled="loading"
                     >
                         Сохранить
                     </primary-button>
 
-                    <secondary-button @click="closeModal">
+                    <secondary-button @click="closeModal" :disabled="loading">
                         Отмена
                     </secondary-button>
                 </div>

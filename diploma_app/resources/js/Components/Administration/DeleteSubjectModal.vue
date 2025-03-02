@@ -3,6 +3,8 @@ import Modal from '@/Components/Modal.vue';
 import { deleteSubject } from '@/api/subjects.js';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import { ref } from 'vue';
+import NProgress from 'nprogress';
 
 const emit = defineEmits(['closeModal', 'deleted']);
 
@@ -16,14 +18,22 @@ const props = defineProps({
     },
 });
 
+const loading = ref(false);
+
 const submit = async () => {
     try {
+        NProgress.start();
+        loading.value = true;
+
         await deleteSubject(props.id);
 
         emit('deleted');
         closeModal();
     } catch (exception) {
         console.log(exception.response.data.message);
+    } finally {
+        NProgress.done();
+        loading.value = false;
     }
 };
 
@@ -46,10 +56,19 @@ const closeModal = () => {
             </p>
 
             <form @submit.prevent="submit">
-                <danger-button class="mt-6" type="submit"
-                    >Удалить</danger-button
+                <danger-button
+                    class="mt-6"
+                    type="submit"
+                    :class="{ 'opacity-25': loading }"
+                    :disabled="loading"
                 >
-                <secondary-button class="ms-3" @click="closeModal">
+                    Удалить
+                </danger-button>
+                <secondary-button
+                    class="ms-3"
+                    @click="closeModal"
+                    :disabled="loading"
+                >
                     Отмена
                 </secondary-button>
             </form>

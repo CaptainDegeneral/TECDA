@@ -1,5 +1,6 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue';
+import SelectSearch from '@/Components/SelectSearch.vue';
 
 const props = defineProps({
     rows: Array,
@@ -64,19 +65,12 @@ const calculateQuality = (row) => {
             <tbody>
                 <tr v-for="(row, rowIndex) in rows" :key="rowIndex">
                     <td>
-                        <select
+                        <select-search
                             v-model="row.discipline"
-                            class="select-bordered select w-full"
-                        >
-                            <option value="">Выберите</option>
-                            <option
-                                v-for="d in disciplines"
-                                :value="d"
-                                :key="d"
-                            >
-                                {{ d }}
-                            </option>
-                        </select>
+                            :options="disciplines"
+                            labelKey="code_name"
+                            valueKey="id"
+                        />
                     </td>
                     <td>
                         <input

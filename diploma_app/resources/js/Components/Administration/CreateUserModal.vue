@@ -4,9 +4,10 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import RoleSelect from '@/Components/Administration/RoleSelect.vue';
 import { createUser } from '@/api/users.js';
+import NProgress from 'nprogress';
 
 const emit = defineEmits(['closeModal', 'created']);
 
@@ -26,8 +27,13 @@ const form = reactive({
     password: null,
 });
 
+const loading = ref(false);
+
 const submit = async () => {
     try {
+        NProgress.start();
+        loading.value = true;
+
         await createUser(form);
 
         emit('created');
@@ -35,6 +41,9 @@ const submit = async () => {
         closeModal();
     } catch (exception) {
         console.log(exception.response.data.message);
+    } finally {
+        NProgress.done();
+        loading.value = false;
     }
 };
 
@@ -142,13 +151,13 @@ const closeModal = () => {
                     <primary-button
                         type="submit"
                         class="mr-3"
-                        :class="{ 'opacity-25': form.processing }"
-                        :disabled="form.processing"
+                        :class="{ 'opacity-25': loading }"
+                        :disabled="loading"
                     >
                         Создать
                     </primary-button>
 
-                    <secondary-button @click="closeModal">
+                    <secondary-button @click="closeModal" :disabled="loading">
                         Отмена
                     </secondary-button>
                 </div>

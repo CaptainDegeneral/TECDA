@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { computed, ref } from 'vue';
 import SubjectsPage from '@/Pages/Administration/SubjectsPage.vue';
 import UsersPage from '@/Pages/Administration/UsersPage.vue';
+import AllReportsPage from '@/Pages/Administration/AllReportsPage.vue';
 
 const tabs = [
     {
@@ -15,6 +16,11 @@ const tabs = [
         id: 2,
         title: 'Пользователи',
         content: UsersPage,
+    },
+    {
+        id: 3,
+        title: 'Отчеты',
+        content: AllReportsPage,
     },
 ];
 
@@ -34,7 +40,7 @@ const selectedComponent = computed(
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="flex flex-row">
                         <nav class="w-[20%] border-r-2 p-6">
-                            <ul class="menu rounded-box bg-base-100 w-full">
+                            <ul class="menu w-full rounded-box bg-base-100">
                                 <li
                                     class="tab__btn"
                                     v-for="tab in tabs"
@@ -52,7 +58,7 @@ const selectedComponent = computed(
                                 </li>
                             </ul>
                         </nav>
-                        <div class="w-4/5 p-6 text-gray-900">
+                        <div class="h-full w-4/5 p-6 text-gray-900">
                             <component :is="selectedComponent" />
                         </div>
                     </div>
