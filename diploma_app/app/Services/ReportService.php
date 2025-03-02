@@ -6,6 +6,7 @@ use App\Http\Requests\Report\EditReportRequest;
 use App\Http\Requests\Report\StoreReportRequest;
 use App\Models\Report;
 use App\Repositories\ReportRepository;
+use Illuminate\Support\Carbon;
 
 class ReportService
 {
@@ -15,7 +16,10 @@ class ReportService
      */
     public static function create(StoreReportRequest $request): Report
     {
+        $formattedDate = Carbon::parse(now())->format('d.m.Y H:m');
+
         return ReportRepository::create([
+            'title' => "Отчет \"$request->name\" от $formattedDate",
             'name' => $request->name,
             'data' => json_encode(
                 $request->data,

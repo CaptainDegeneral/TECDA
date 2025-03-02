@@ -36,7 +36,7 @@ const selectedComponent = computed(() => {
                     <div class="p-6 text-gray-900">
                         <div class="mb-4 flex flex-row items-center">
                             <select
-                                class="select select-primary mr-2 w-[90%]"
+                                class="select select-primary mr-2 w-full"
                                 v-model="selectedReport"
                             >
                                 <option disabled value="">
@@ -50,49 +50,6 @@ const selectedComponent = computed(() => {
                                     {{ report.title }}
                                 </option>
                             </select>
-                            <button
-                                class="btn btn-primary btn-soft w-[10%]"
-                                :disabled="!selectedReport"
-                            >
-                                <svg
-                                    width="20"
-                                    height="20"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="icon"
-                                >
-                                    <path
-                                        d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    ></path>
-                                    <path
-                                        d="M9 12H15"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    ></path>
-                                    <path
-                                        d="M9 16H12"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    ></path>
-                                    <path
-                                        d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    ></path>
-                                </svg>
-                                Мои отчеты
-                            </button>
                         </div>
 
                         <div v-if="selectedComponent">

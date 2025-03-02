@@ -99,7 +99,7 @@ onMounted(getUsersList);
         </button>
     </div>
 
-    <div class="flex w-full flex-col items-center">
+    <div class="flex w-full flex-col items-center space-y-6">
         <div v-if="users && users.length > 0" class="w-full overflow-x-auto">
             <table class="table">
                 <thead>

@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-const getReportsList = async (userId) => {
+const getReportsList = async (userId, page, searchValue) => {
     return await axios.get(
         route('report.index', {
             user_id: userId,
+            page: page,
+            search_value: searchValue,
         }),
     );
 };

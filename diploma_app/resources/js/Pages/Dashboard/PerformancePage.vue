@@ -109,29 +109,24 @@ const intermediateResults = computed(() =>
         const allRows = [...tab.autumnWinter, ...tab.springSummer];
         const disciplineMap = {};
         allRows.forEach((row) => {
-            // Извлекаем code_name из объекта discipline, если он существует
             const discKey = row.discipline ? row.discipline.code_name : null;
             if (discKey) {
-                // Инициализируем запись для данной дисциплины, если её ещё нет
                 if (!disciplineMap[discKey]) {
                     disciplineMap[discKey] = {
                         performance: [],
                         quality: [],
                     };
                 }
-                // Вычисляем успеваемость и качество
                 const perf = parseFloat(calculatePerformance(row));
                 const qual = parseFloat(calculateQuality(row));
-                // Добавляем значения, если они корректны
                 if (!isNaN(perf) && perf !== null)
                     disciplineMap[discKey].performance.push(perf);
                 if (!isNaN(qual) && qual !== null)
                     disciplineMap[discKey].quality.push(qual);
             }
         });
-        // Преобразуем disciplineMap в массив объектов для таблицы
         return Object.entries(disciplineMap).map(([discKey, data]) => ({
-            discipline: discKey, // discKey — это code_name
+            discipline: discKey,
             performance: data.performance.length
                 ? (
                       data.performance.reduce((sum, val) => sum + val, 0) /
@@ -148,7 +143,6 @@ const intermediateResults = computed(() =>
     }),
 );
 
-// Вычисляем конечные результаты по всем дисциплинам
 const finalResults = computed(() => {
     const allDisciplines = new Set();
     intermediateResults.value.forEach((tabResults) => {
@@ -174,7 +168,6 @@ const finalResults = computed(() => {
     };
 });
 
-// Функция для замены пустых значений на null
 const sanitizeData = (data) => {
     if (data === undefined) return null;
     if (typeof data === 'string' && data.trim() === '') return null;
@@ -189,7 +182,6 @@ const sanitizeData = (data) => {
     return data;
 };
 
-// Функция для получения данных с вычисляемыми колонками для каждой строки
 const getEnhancedTabsData = () => {
     return tabsData.value.map((tab) => ({
         ...tab,
@@ -208,7 +200,6 @@ const getEnhancedTabsData = () => {
     }));
 };
 
-// Функция для сбора всех данных в JSON
 const collectAllData = () => {
     const data = {
         configuration: {
@@ -223,7 +214,6 @@ const collectAllData = () => {
     return JSON.stringify(sanitizeData(data), null, 2);
 };
 
-// Привязываем результат сбора данных к computed для отображения в шаблоне (например, в <pre>)
 const collectedData = computed(() => collectAllData());
 
 const loading = ref(false);
@@ -508,12 +498,12 @@ onMounted(getSubjectsList);
         </section>
 
         <!-- Вывод JSON для отладки -->
-        <section class="mt-8">
-            <h2 class="mb-4 text-xl font-semibold text-gray-900">
-                Собранные данные (JSON)
-            </h2>
-            <pre class="rounded bg-gray-100 p-4">{{ collectedData }}</pre>
-        </section>
+        <!--        <section class="mt-8">-->
+        <!--            <h2 class="mb-4 text-xl font-semibold text-gray-900">-->
+        <!--                Собранные данные (JSON)-->
+        <!--            </h2>-->
+        <!--            <pre class="rounded bg-gray-100 p-4">{{ collectedData }}</pre>-->
+        <!--        </section>-->
     </div>
 </template>
 

@@ -1,12 +1,16 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import TextInput from '@/Components/TextInput.vue';
 import NProgress from 'nprogress';
+import debounce from 'lodash/debounce.js';
 import { getReportsList } from '@/api/reports.js';
 import ShowReportModal from '@/Components/Reports/ShowReportModal.vue';
+import VPagination from '@/Components/VPagination.vue';
 
 const reports = ref([]);
 const searchValue = ref('');
+const pagination = ref();
+const currentPage = ref(1);
 
 const showReportModal = ref(false);
 const chosenReportId = ref(null);
@@ -15,13 +19,26 @@ const getReports = async () => {
     try {
         NProgress.start();
 
-        const { data } = await getReportsList();
-        reports.value = data;
+        const { data } = await getReportsList(
+            null,
+            currentPage.value,
+            searchValue.value,
+        );
+
+        reports.value = data.data;
+        pagination.value = data.meta;
     } catch (exception) {
         console.error('Ошибка загрузки отчетов:', exception);
     } finally {
         NProgress.done();
     }
+};
+
+const changePage = async (page) => {
+    if (page < 1 || (pagination.value && page > pagination.value.last_page))
+        return;
+    currentPage.value = page;
+    await getReports();
 };
 
 const showReport = (id) => {
@@ -34,21 +51,14 @@ const closeReport = () => {
     chosenReportId.value = null;
 };
 
-const filteredReports = computed(() => {
-    const searchTerm = searchValue.value.trim().toLowerCase();
-    if (!searchTerm) {
-        return reports.value;
-    }
-    return reports.value.filter((report) => {
-        const fields = [
-            report.title,
-            report.user.last_name,
-            report.user.name,
-            report.user.surname,
-        ];
-        return fields.some((field) => field.toLowerCase().includes(searchTerm));
-    });
-});
+const search = async () => {
+    currentPage.value = 1;
+    await getReports();
+};
+
+const debouncedSearch = debounce(search, 500);
+
+watch(searchValue, debouncedSearch);
 
 onMounted(getReports);
 </script>
@@ -61,7 +71,10 @@ onMounted(getReports);
             class="mr-5 w-full"
         />
     </div>
-    <div v-if="filteredReports && filteredReports.length > 0">
+    <div
+        class="flex flex-col items-center space-y-6"
+        v-if="reports && reports.length > 0"
+    >
         <table class="table w-full">
             <thead>
                 <tr>
@@ -70,7 +83,7 @@ onMounted(getReports);
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="report in filteredReports" :key="report.id">
+                <tr v-for="report in reports" :key="report.id">
                     <td>
                         <button
                             class="btn btn-link"
@@ -87,6 +100,12 @@ onMounted(getReports);
                 </tr>
             </tbody>
         </table>
+
+        <v-pagination
+            v-if="reports && reports.length > 0 && pagination"
+            :pagination="pagination"
+            @page-changed="changePage"
+        />
     </div>
 
     <div

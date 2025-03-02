@@ -24,11 +24,12 @@ class ReportController extends Controller
     {
         $user = auth()->user();
         $userId = $request->query('user_id');
+        $searchValue = $request->query('search_value');
 
         if ($user->role_id === 1) {
-            $reports = $userId ? ReportRepository::getByUser($userId) : ReportRepository::all();
+            $reports = $userId ? ReportRepository::getByUser($userId, $searchValue) : ReportRepository::all($searchValue);
         } else {
-            $reports = ReportRepository::getByUser($user->id);
+            $reports = ReportRepository::getByUser($user->id, $searchValue);
         }
 
         return ReportResource::collection($reports)->response();

@@ -99,7 +99,7 @@ onMounted(getSubjectsList);
         </button>
     </div>
 
-    <div class="flex w-full flex-col items-center">
+    <div class="flex w-full flex-col items-center space-y-6">
         <!-- Таблица и пагинация отображаются, если есть данные -->
         <div
             v-if="subjects && subjects.length > 0"

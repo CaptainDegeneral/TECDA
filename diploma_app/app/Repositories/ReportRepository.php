@@ -3,25 +3,38 @@
 namespace App\Repositories;
 
 use App\Models\Report;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ReportRepository
 {
     /**
      * Получение всех отчетов
-     * @return Collection
+     * @param string|null $searchValue
+     * @return LengthAwarePaginator
      */
-    public static function all(): Collection
+    public static function all(?string $searchValue): LengthAwarePaginator
     {
-        return Report::with('user:id,last_name,name,surname,email')
+        $reports = Report::with('user:id,last_name,name,surname,email')
             ->orderByDesc('created_at')
-            ->get([
-            'id',
-            'name',
-            'user_id',
-            'created_at',
-            'updated_at'
-        ]);
+            ->select([
+                'id',
+                'title',
+                'name',
+                'user_id',
+                'created_at',
+                'updated_at'
+            ]);
+
+        if ($searchValue) {
+            $reports->whereLike('title', "%$searchValue%")
+                ->orWhereHas('user', function ($query) use ($searchValue) {
+                    $query->whereLike('last_name', "%$searchValue%")
+                        ->orWhereLike('name', "%$searchValue%")
+                        ->orWhereLike('surname', "%$searchValue%");
+                });
+        }
+
+        return $reports->paginate(10);
     }
 
     /**
@@ -33,6 +46,7 @@ class ReportRepository
     {
         $report = Report::with('user:id,last_name,name,surname,email')->select([
             'id',
+            'title',
             'name',
             'data',
             'user_id',
@@ -50,14 +64,21 @@ class ReportRepository
     /**
      * Получение отчетов по ID пользователя
      * @param int $userId
-     * @return Collection
+     * @param string|null $searchValue
+     * @return LengthAwarePaginator
      */
-    public static function getByUser(int $userId): Collection
+    public static function getByUser(int $userId, ?string $searchValue): LengthAwarePaginator
     {
-        return Report::with('user:id,last_name,name,surname,email')
+        $reports = Report::with('user:id,last_name,name,surname,email')
             ->where('user_id', $userId)
             ->orderByDesc('created_at')
-            ->get(['id', 'name', 'user_id', 'created_at', 'updated_at']);
+            ->select(['id', 'title', 'name', 'user_id', 'created_at', 'updated_at']);
+
+        if ($searchValue) {
+            $reports->whereLike('title', "%$searchValue%");
+        }
+
+        return $reports->paginate(10);
     }
 
     /**

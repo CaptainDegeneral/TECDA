@@ -19,13 +19,9 @@ class ReportResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $formattedDate = Carbon::parse($this->created_at)->format('d.m.Y');
-
         return [
             'id' => $this->id,
-            'title' => $this->whenHas('name', function () use ($formattedDate) {
-                return "Отчет \"$this->name\" от $formattedDate";
-            }),
+            'title' => $this->whenHas('title'),
             'name' => $this->whenHas('name'),
             'data' => $this->whenHas('data'),
             'user_id' => $this->user_id,
