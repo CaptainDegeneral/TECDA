@@ -74,6 +74,7 @@ import {
     computed,
     onMounted,
     onUnmounted,
+    ref,
 } from 'vue';
 
 const props = defineProps({
@@ -114,19 +115,24 @@ const textColorClass = computed(() => {
     return 'text-white';
 });
 
-let timer;
+const timer = ref(null);
 
 onMounted(() => {
-    timer = setTimeout(() => {
+    timer.value = setTimeout(() => {
         close();
     }, props.duration);
 });
 
 onUnmounted(() => {
-    clearTimeout(timer);
+    if (timer.value) {
+        clearTimeout(timer.value);
+    }
 });
 
 const close = () => {
+    if (timer.value) {
+        clearTimeout(timer.value);
+    }
     emit('close');
 };
 </script>

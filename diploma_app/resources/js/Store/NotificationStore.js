@@ -5,7 +5,8 @@ export const useNotificationStore = defineStore('notificationStore', () => {
     const notifications = ref([]);
 
     const addNotification = (type, message, duration = 5000) => {
-        notifications.value.push({ type, message, duration });
+        const id = Date.now() + Math.random();
+        notifications.value.push({ id, type, message, duration });
     };
 
     const removeNotification = (index) => {
