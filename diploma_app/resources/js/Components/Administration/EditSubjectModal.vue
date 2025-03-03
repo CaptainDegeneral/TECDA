@@ -7,6 +7,11 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { reactive, ref, watch } from 'vue';
 import { editSubject, getSubject } from '@/api/subjects.js';
 import NProgress from 'nprogress';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+import { handleApiError } from '@/Utils/errorHandler.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const emit = defineEmits(['closeModal', 'edited']);
 
@@ -37,7 +42,7 @@ const submit = async () => {
         emit('edited');
         closeModal();
     } catch (exception) {
-        console.log(exception.response.data.message);
+        handleApiError(exception, addNotification);
     } finally {
         NProgress.done();
         loading.value = false;

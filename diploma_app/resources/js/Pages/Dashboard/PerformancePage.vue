@@ -6,6 +6,11 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { createReport } from '@/api/reports.js';
 import NProgress from 'nprogress';
 import { getSubjectsCodeList } from '@/api/subjects.js';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+import { handleApiError } from '@/Utils/errorHandler.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 // Основные состояния
 const category = ref('');
@@ -16,10 +21,8 @@ const activeTab = ref(0);
 const showFinalResults = ref(false);
 const showIntermediateResults = ref(false);
 
-// Список дисциплин
 const disciplines = ref();
 
-// Заголовки таблицы семестра
 const semesterTableHeaders = [
     'Дисциплина',
     'Группа',
@@ -30,13 +33,11 @@ const semesterTableHeaders = [
     'Оценок',
     'Успеваемость (%)',
     'Качество (%)',
-    '', // для колонки "Действия"
+    '',
 ];
 
-// Данные вкладок
 const tabsData = ref([]);
 
-// Функция создания пустой строки таблицы
 const createEmptyRow = () => ({
     discipline: '',
     group: '',
@@ -46,7 +47,6 @@ const createEmptyRow = () => ({
     threes: 0,
 });
 
-// Генерация вкладок (не более 5)
 const generateTabs = () => {
     const tabsCount = Math.min(yearsOfWork.value, 5);
     tabsData.value = Array.from({ length: tabsCount }, (_, index) => ({
@@ -56,17 +56,15 @@ const generateTabs = () => {
     }));
 };
 
-// Разблокирование основной конфигурации
 const unlockMainConfiguration = () => {
     if (!category.value || yearsOfWork.value <= 0 || startYear.value <= 0) {
-        alert('Пожалуйста, заполните все поля корректно.');
+        addNotification('error', 'Пожалуйста, заполните все поля корректно');
         return;
     }
     generateTabs();
     isConfigured.value = true;
 };
 
-// Функции управления строками
 const addRow = (semester, tabIndex) => {
     tabsData.value[tabIndex][semester].push(createEmptyRow());
 };
@@ -74,12 +72,12 @@ const deleteRow = (semester, tabIndex, rowIndex) => {
     tabsData.value[tabIndex][semester].splice(rowIndex, 1);
 };
 
-// Вспомогательные функции вычислений с возвращением null вместо "0.00"
 const calculateTotalGrades = (row) => {
     if (!row.discipline) return null;
     const sum = row.fives + row.fours + row.threes;
     return sum === 0 ? null : sum;
 };
+
 const calculatePerformance = (row) => {
     if (!row.discipline) return null;
     const total = calculateTotalGrades(row);
@@ -89,21 +87,21 @@ const calculatePerformance = (row) => {
         100
     ).toFixed(2);
 };
+
 const calculateQuality = (row) => {
     if (!row.discipline) return null;
     if (row.students === 0) return null;
     return (((row.fives + row.fours) / row.students) * 100).toFixed(2);
 };
 
-// Функции переключения видимости блоков
 const toggleIntermediateResults = () => {
     showIntermediateResults.value = !showIntermediateResults.value;
 };
+
 const toggleFinalResults = () => {
     showFinalResults.value = !showFinalResults.value;
 };
 
-// Вычисляем промежуточные результаты для каждой вкладки
 const intermediateResults = computed(() =>
     tabsData.value.map((tab) => {
         const allRows = [...tab.autumnWinter, ...tab.springSummer];
@@ -216,15 +214,58 @@ const collectAllData = () => {
 
 const collectedData = computed(() => collectAllData());
 
+const hasInvalidNulls = (data) => {
+    const parsedData = JSON.parse(data);
+
+    const checkForInvalidValues = (obj, path = []) => {
+        if (path.length === 1 && path[0] === 'finalResults') {
+            return false;
+        }
+
+        if (Array.isArray(obj)) {
+            return obj.some((item, index) =>
+                checkForInvalidValues(item, [...path, index]),
+            );
+        }
+
+        if (obj !== null && typeof obj === 'object') {
+            return Object.entries(obj).some(([key, value]) =>
+                checkForInvalidValues(value, [...path, key]),
+            );
+        }
+
+        return obj === null || obj === '0.00';
+    };
+
+    return checkForInvalidValues(parsedData);
+};
+
 const loading = ref(false);
 
 const getSubjectsList = async () => {
-    const { data } = await getSubjectsCodeList();
-
-    disciplines.value = data;
+    try {
+        NProgress.start();
+        const { data } = await getSubjectsCodeList();
+        disciplines.value = data;
+    } catch (exception) {
+        addNotification(
+            'error',
+            'При загрузке списка дисциплин произошла ошибка',
+        );
+    } finally {
+        NProgress.done();
+    }
 };
 
 const saveReport = async () => {
+    if (hasInvalidNulls(collectedData.value)) {
+        addNotification(
+            'error',
+            'Для сохранения отчета необходимо заполнить все данные: дисциплины должны быть выбраны, а поля для групп, количества студентов и оценок должны быть заполнены',
+        );
+        return;
+    }
+
     try {
         NProgress.start();
         loading.value = true;
@@ -234,8 +275,9 @@ const saveReport = async () => {
             collectedData.value,
             'Успеваемость и качество образования',
         );
+        addNotification('success', 'Отчет успешно сохранен');
     } catch (exception) {
-        //
+        handleApiError(exception, addNotification);
     } finally {
         NProgress.done();
         loading.value = false;
@@ -497,7 +539,7 @@ onMounted(getSubjectsList);
             </primary-button>
         </section>
 
-        <!-- Вывод JSON для отладки -->
+        <!--        Вывод JSON для отладки-->
         <!--        <section class="mt-8">-->
         <!--            <h2 class="mb-4 text-xl font-semibold text-gray-900">-->
         <!--                Собранные данные (JSON)-->

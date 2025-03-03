@@ -6,6 +6,7 @@ import { getReport } from '@/api/reports.js';
 import NProgress from 'nprogress';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
 
 const emit = defineEmits(['closeModal', 'created']);
 
@@ -13,6 +14,9 @@ const props = defineProps({
     id: { required: true },
     show: { type: Boolean, default: false },
 });
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const report = ref(null);
 const loading = ref(false);
@@ -22,7 +26,7 @@ const parsedData = computed(() => {
         try {
             return JSON.parse(report.value.data);
         } catch (e) {
-            console.error('Ошибка при парсинге JSON:', e);
+            addNotification('error', 'Ошибка при обработке данных отчета');
             return {};
         }
     }
@@ -52,7 +56,7 @@ const getReportData = async () => {
 
         report.value = data;
     } catch (exception) {
-        console.error('Ошибка при загрузке отчета:', exception);
+        addNotification('error', 'При загрузке отчета произошла ошибка');
     } finally {
         NProgress.done();
         loading.value = false;
@@ -114,7 +118,9 @@ watch(
                                     v-for="row in finalResults.performanceTable"
                                     :key="row.discipline"
                                 >
-                                    <td class="w-1/3">{{ row.discipline }}</td>
+                                    <td class="w-1/3">
+                                        {{ row.discipline }}
+                                    </td>
                                     <td
                                         v-for="year in years"
                                         :key="year"
@@ -149,7 +155,9 @@ watch(
                                     v-for="row in finalResults.qualityTable"
                                     :key="row.discipline"
                                 >
-                                    <td class="w-1/3">{{ row.discipline }}</td>
+                                    <td class="w-1/3">
+                                        {{ row.discipline }}
+                                    </td>
                                     <td
                                         v-for="year in years"
                                         :key="year"

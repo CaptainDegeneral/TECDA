@@ -8,6 +8,10 @@ import CreateUserModal from '@/Components/Administration/CreateUserModal.vue';
 import EditUserModal from '@/Components/Administration/EditUserModal.vue';
 import DeleteUserModal from '@/Components/Administration/DeleteUserModal.vue';
 import NProgress from 'nprogress';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const searchValue = ref('');
 const users = ref();
@@ -19,14 +23,34 @@ const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 
+// Обработчики событий модальных окон
+const handleCreated = () => {
+    addNotification('success', 'Пользователь успешно создан');
+    search();
+};
+const handleEdited = () => {
+    addNotification('success', 'Пользователь успешно отредактирован');
+    search();
+};
+const handleDeleted = () => {
+    addNotification('success', 'Пользователь успешно удален');
+    search();
+};
+const handleError = (message) => {
+    addNotification('error', message);
+};
+
 const getUsersList = async () => {
-    NProgress.start();
-
-    const response = await getUsers(currentPage.value, searchValue.value);
-    users.value = response.data.data;
-    pagination.value = response.data.meta;
-
-    NProgress.done();
+    try {
+        NProgress.start();
+        const response = await getUsers(currentPage.value, searchValue.value);
+        users.value = response.data.data;
+        pagination.value = response.data.meta;
+    } catch (exception) {
+        addNotification('error', 'При загрузке пользователей произошла ошибка');
+    } finally {
+        NProgress.done();
+    }
 };
 
 const changePage = async (page) => {
@@ -64,7 +88,6 @@ const search = async () => {
 const debouncedSearch = debounce(search, 500);
 
 watch(searchValue, debouncedSearch);
-
 onMounted(getUsersList);
 </script>
 
@@ -258,18 +281,21 @@ onMounted(getUsersList);
     <create-user-modal
         :show="showCreateModal"
         @close-modal="showCreateModal = false"
-        @created="search"
+        @created="handleCreated"
+        @error="handleError"
     />
     <edit-user-modal
         :id="selectedUserId"
         :show="showEditModal"
-        @edited="search"
+        @edited="handleEdited"
         @close-modal="closeEditModal"
+        @error="handleError"
     />
     <delete-user-modal
         :id="selectedUserId"
         :show="showDeleteModal"
-        @deleted="search"
+        @deleted="handleDeleted"
         @close-modal="closeDeleteModal"
+        @error="handleError"
     />
 </template>

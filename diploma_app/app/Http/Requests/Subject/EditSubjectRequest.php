@@ -36,8 +36,19 @@ class EditSubjectRequest extends FormRequest
     {
         return [
             'id' => ['required', 'integer', 'exists:subjects,id'],
-            'name' => ['required', 'string', 'max:255', Rule::unique('subjects', 'name')->ignore($this->id)],
-            'code' => ['nullable', 'string', 'max:100'],
+            'name' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('subjects', 'name')->ignore($this->id),
+                'required_without:code',
+            ],
+            'code' => [
+                'nullable',
+                'string',
+                'max:100',
+                'required_without:name',
+            ],
         ];
     }
 

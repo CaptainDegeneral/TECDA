@@ -6,6 +6,11 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { reactive } from 'vue';
 import { createSubject } from '@/api/subjects.js';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+import { handleApiError } from '@/Utils/errorHandler.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const emit = defineEmits(['closeModal', 'created']);
 
@@ -26,13 +31,17 @@ const submit = async () => {
         await createSubject(form);
 
         emit('created');
+        form.name = null;
+        form.code = null;
         closeModal();
     } catch (exception) {
-        console.log(exception.response.data.message);
+        handleApiError(exception, addNotification);
     }
 };
 
 const closeModal = () => {
+    form.name = null;
+    form.code = null;
     emit('closeModal');
 };
 </script>

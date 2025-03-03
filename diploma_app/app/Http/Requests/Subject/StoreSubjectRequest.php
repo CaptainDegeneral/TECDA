@@ -17,8 +17,8 @@ class StoreSubjectRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'name' => __('attributes.name'),
-            'code' => __('attributes.code'),
+            'name' => __('attributes.subject.name'),
+            'code' => __('attributes.subject.code'),
         ];
     }
 
@@ -30,8 +30,19 @@ class StoreSubjectRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', 'unique:subjects,name'],
-            'code' => ['nullable', 'string', 'max:100'],
+            'name' => [
+                'nullable',
+                'string',
+                'max:255',
+                'unique:subjects,name',
+                'required_without:code',
+            ],
+            'code' => [
+                'nullable',
+                'string',
+                'max:100',
+                'required_without:name',
+            ],
         ];
     }
 }

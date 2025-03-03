@@ -5,6 +5,11 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { deleteUser } from '@/api/users.js';
 import { ref } from 'vue';
 import NProgress from 'nprogress';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+import { handleApiError } from '@/Utils/errorHandler.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const emit = defineEmits(['closeModal', 'deleted']);
 
@@ -30,7 +35,7 @@ const submit = async () => {
         emit('deleted');
         closeModal();
     } catch (exception) {
-        console.log(exception.response.data.message);
+        handleApiError(exception, addNotification);
     } finally {
         NProgress.done();
         loading.value = false;

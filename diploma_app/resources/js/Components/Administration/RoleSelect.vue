@@ -2,13 +2,24 @@
 import InputLabel from '@/Components/InputLabel.vue';
 import { onMounted, ref } from 'vue';
 import { getRoles } from '@/api/roles.js';
+import NProgress from 'nprogress';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const roles = ref();
 
 const getRolesList = async () => {
-    const response = await getRoles();
-
-    roles.value = response.data;
+    try {
+        NProgress.start();
+        const response = await getRoles();
+        roles.value = response.data;
+    } catch (exception) {
+        addNotification('error', 'При загрузке списка ролей произошла ошибка');
+    } finally {
+        NProgress.done();
+    }
 };
 
 const modelValue = defineModel();

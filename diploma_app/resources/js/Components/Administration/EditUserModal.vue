@@ -7,8 +7,13 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { reactive, ref, watch } from 'vue';
 import RoleSelect from '@/Components/Administration/RoleSelect.vue';
 import { editUser, getUser } from '@/api/users.js';
+import { handleApiError } from '@/Utils/errorHandler.js';
 import Checkbox from '@/Components/Checkbox.vue';
 import NProgress from 'nprogress';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const emit = defineEmits(['closeModal', 'edited']);
 
@@ -45,7 +50,7 @@ const submit = async () => {
         resetForm();
         closeModal();
     } catch (exception) {
-        console.log(exception.response.data.message);
+        handleApiError(exception, addNotification);
     } finally {
         NProgress.done();
         loading.value = false;

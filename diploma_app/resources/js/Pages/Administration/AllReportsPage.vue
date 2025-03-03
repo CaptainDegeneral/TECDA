@@ -6,6 +6,10 @@ import debounce from 'lodash/debounce.js';
 import { getReportsList } from '@/api/reports.js';
 import ShowReportModal from '@/Components/Reports/ShowReportModal.vue';
 import VPagination from '@/Components/VPagination.vue';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const reports = ref([]);
 const searchValue = ref('');
@@ -28,7 +32,10 @@ const getReports = async () => {
         reports.value = data.data;
         pagination.value = data.meta;
     } catch (exception) {
-        console.error('Ошибка загрузки отчетов:', exception);
+        addNotification(
+            'error',
+            'При загрузке списка отчетов произошла ошибка',
+        );
     } finally {
         NProgress.done();
     }

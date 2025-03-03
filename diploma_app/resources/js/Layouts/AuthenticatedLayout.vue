@@ -6,6 +6,13 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import VNotification from '@/Components/VNotification.vue';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+import { storeToRefs } from 'pinia';
+
+const notificationStore = useNotificationStore();
+const { notifications } = storeToRefs(notificationStore);
+const { removeNotification } = notificationStore;
 
 const page = usePage();
 const showingNavigationDropdown = ref(false);
@@ -201,8 +208,38 @@ const isAdmin = computed(() => user.value.role_id === 1);
 
             <!-- Page Content -->
             <main>
+                <teleport to="body">
+                    <transition-group
+                        name="fade"
+                        tag="div"
+                        class="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-2"
+                    >
+                        <VNotification
+                            v-for="(notification, index) in notifications"
+                            :key="notification.id || index"
+                            :type="notification.type"
+                            :message="notification.message"
+                            :duration="notification.duration"
+                            @close="removeNotification(index)"
+                        />
+                    </transition-group>
+                </teleport>
                 <slot />
             </main>
         </div>
     </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: translateY(10px);
+}
+</style>

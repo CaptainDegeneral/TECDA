@@ -8,6 +8,10 @@ import EditSubjectModal from '@/Components/Administration/EditSubjectModal.vue';
 import DeleteSubjectModal from '@/Components/Administration/DeleteSubjectModal.vue';
 import TextInput from '@/Components/TextInput.vue';
 import NProgress from 'nprogress';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const searchValue = ref('');
 const subjects = ref();
@@ -19,14 +23,36 @@ const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 
+const handleCreated = () => {
+    addNotification('success', 'Дисциплина успешно создана');
+    search();
+};
+const handleEdited = () => {
+    addNotification('success', 'Дисциплина успешно отредактирована');
+    search();
+};
+const handleDeleted = () => {
+    addNotification('success', 'Дисциплина успешно удалена');
+    search();
+};
+const handleError = (message) => {
+    addNotification('error', message);
+};
+
 const getSubjectsList = async () => {
-    NProgress.start();
-
-    const response = await getAllSubjects(currentPage.value, searchValue.value);
-    subjects.value = response.data.data;
-    pagination.value = response.data.meta;
-
-    NProgress.done();
+    try {
+        NProgress.start();
+        const response = await getAllSubjects(
+            currentPage.value,
+            searchValue.value,
+        );
+        subjects.value = response.data.data;
+        pagination.value = response.data.meta;
+    } catch (exception) {
+        addNotification('error', 'При загрузке дисциплин произошла ошибка');
+    } finally {
+        NProgress.done();
+    }
 };
 
 const changePage = async (page) => {
@@ -64,7 +90,6 @@ const search = async () => {
 const debouncedSearch = debounce(search, 500);
 
 watch(searchValue, debouncedSearch);
-
 onMounted(getSubjectsList);
 </script>
 
@@ -100,7 +125,6 @@ onMounted(getSubjectsList);
     </div>
 
     <div class="flex w-full flex-col items-center space-y-6">
-        <!-- Таблица и пагинация отображаются, если есть данные -->
         <div
             v-if="subjects && subjects.length > 0"
             class="w-full overflow-x-auto"
@@ -255,18 +279,21 @@ onMounted(getSubjectsList);
     <create-subject-modal
         :show="showCreateModal"
         @close-modal="showCreateModal = false"
-        @created="search"
+        @created="handleCreated"
+        @error="handleError"
     />
     <edit-subject-modal
         :id="selectedSubjectId"
         :show="showEditModal"
-        @edited="search"
+        @edited="handleEdited"
         @close-modal="closeEditModal"
+        @error="handleError"
     />
     <delete-subject-modal
         :id="selectedSubjectId"
         :show="showDeleteModal"
-        @deleted="search"
+        @deleted="handleDeleted"
         @close-modal="closeDeleteModal"
+        @error="handleError"
     />
 </template>

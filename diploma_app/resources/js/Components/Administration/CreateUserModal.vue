@@ -8,6 +8,11 @@ import { reactive, ref } from 'vue';
 import RoleSelect from '@/Components/Administration/RoleSelect.vue';
 import { createUser } from '@/api/users.js';
 import NProgress from 'nprogress';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
+import { handleApiError } from '@/Utils/errorHandler.js';
+
+const notification = useNotificationStore();
+const { addNotification } = notification;
 
 const emit = defineEmits(['closeModal', 'created']);
 
@@ -40,7 +45,7 @@ const submit = async () => {
         resetForm();
         closeModal();
     } catch (exception) {
-        console.log(exception.response.data.message);
+        handleApiError(exception, addNotification);
     } finally {
         NProgress.done();
         loading.value = false;
