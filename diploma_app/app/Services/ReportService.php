@@ -16,7 +16,7 @@ class ReportService
      */
     public static function create(StoreReportRequest $request): Report
     {
-        $formattedDate = Carbon::parse(now())->format('d.m.Y H:m');
+        $formattedDate = Carbon::parse(now())->format('d.m.Y H:i');
 
         return ReportRepository::create([
             'title' => "Отчет \"$request->name\" от $formattedDate",

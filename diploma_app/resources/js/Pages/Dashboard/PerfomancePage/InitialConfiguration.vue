@@ -77,7 +77,7 @@ const unlockMainConfiguration = () => {
                 <button
                     type="button"
                     @click="unlockMainConfiguration"
-                    class="btn btn-primary w-full"
+                    class="btn btn-primary btn-soft w-full"
                 >
                     Разблокировать
                 </button>

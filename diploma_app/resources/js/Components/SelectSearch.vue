@@ -3,7 +3,21 @@
         <div class="selected" @click="toggleDropdown">
             <span v-if="selectedItem">{{ selectedItem[labelKey] }}</span>
             <span v-else class="placeholder">Выберите дисциплину</span>
-            <span class="arrow">{{ dropdownVisible ? '▲' : '▼' }}</span>
+            <svg
+                class="arrow text-gray-500"
+                :class="{ 'rotate-180': dropdownVisible }"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path
+                    d="M8 10L12 14L16 10"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+            </svg>
         </div>
         <div v-if="dropdownVisible" class="dropdown">
             <input
@@ -137,8 +151,14 @@ onUnmounted(() => {
 }
 
 .arrow {
+    width: 16px;
+    height: 16px;
     margin-left: 8px;
-    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
 }
 
 .dropdown {

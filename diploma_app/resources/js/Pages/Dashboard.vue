@@ -68,3 +68,5 @@ const selectedComponent = computed(() => {
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped></style>
