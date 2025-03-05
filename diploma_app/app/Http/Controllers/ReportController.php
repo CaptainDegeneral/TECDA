@@ -70,12 +70,15 @@ class ReportController extends Controller
         }
 
         try {
-            ReportService::create($request);
+            $report = ReportService::create($request);
 
             return response()->json([
                 'data' => [
                     'success' => true,
                     'message' => __('messages.success.created'),
+                    'report' => [
+                        'id' => $report->id,
+                    ],
                 ],
             ]);
         } catch (Exception $e) {

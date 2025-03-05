@@ -1,4 +1,15 @@
 /**
+ * Округляет число до заданного количества знаков после запятой с математическим округлением (round half up).
+ * @param {number} number - Число для округления.
+ * @param {number} decimals - Количество знаков после запятой.
+ * @returns {string} Округленное число как строка.
+ */
+const roundToDecimal = (number, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.round(number * factor) / factor).toFixed(decimals);
+};
+
+/**
  * Вычисляет общее количество оценок для заданной строки.
  * @param {Object} row - Данные строки, содержащие оценки (пятёрки, четвёрки, тройки).
  * @returns {number|null} Общее количество оценок или null, если дисциплина не задана или сумма оценок равна нулю.
@@ -18,10 +29,9 @@ export const calculatePerformance = (row) => {
     if (!row.discipline) return null;
     const total = calculateTotalGrades(row);
     if (!total) return null;
-    return (
-        ((row.fives * 5 + row.fours * 4 + row.threes * 3) / (total * 5)) *
-        100
-    ).toFixed(2);
+    const value =
+        ((row.fives * 5 + row.fours * 4 + row.threes * 3) / (total * 5)) * 100;
+    return roundToDecimal(value, 2);
 };
 
 /**
@@ -32,5 +42,6 @@ export const calculatePerformance = (row) => {
 export const calculateQuality = (row) => {
     if (!row.discipline) return null;
     if (row.students === 0) return null;
-    return (((row.fives + row.fours) / row.students) * 100).toFixed(2);
+    const value = ((row.fives + row.fours) / row.students) * 100;
+    return roundToDecimal(value, 2);
 };
