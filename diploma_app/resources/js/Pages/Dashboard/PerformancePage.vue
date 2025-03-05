@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { createReport } from '@/api/reports.js';
+import { createReport } from '@/api/reports.js'; // Убираем exportReport
 import NProgress from 'nprogress';
 import { getSubjectsCodeList } from '@/api/subjects.js';
 import { useNotificationStore } from '@/Store/NotificationStore.js';
@@ -16,6 +16,7 @@ import MainConfiguration from '@/Pages/Dashboard/PerfomancePage/MainConfiguratio
 import IntermediateResults from '@/Pages/Dashboard/PerfomancePage/IntermediateResults.vue';
 import FinalResults from '@/Pages/Dashboard/PerfomancePage/FinalResults.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import ShowReportModal from '@/Components/Reports/ShowReportModal.vue';
 
 // Инициализация хранилища уведомлений
 const notification = useNotificationStore();
@@ -32,6 +33,9 @@ const showIntermediateResults = ref(false);
 const disciplines = ref([]);
 const tabsData = ref([]);
 const loading = ref(false);
+const showReportModal = ref(false); // Для управления модальным окном
+const chosenReportId = ref(null); // ID выбранного отчета
+const showReportLink = ref(false); // Для отображения кнопки "Перейти к отчету"
 
 // Создание пустой строки таблицы
 const createEmptyRow = () => ({
@@ -226,11 +230,13 @@ const saveReport = async () => {
     try {
         NProgress.start();
         loading.value = true;
-        await createReport(
+        const response = await createReport(
             null,
             collectedData.value,
             'Успеваемость и качество образования',
         );
+        chosenReportId.value = response.data.data.report.id;
+        showReportLink.value = true;
         addNotification('success', 'Отчет успешно сохранен');
     } catch (exception) {
         handleApiError(exception, addNotification);
@@ -238,6 +244,18 @@ const saveReport = async () => {
         NProgress.done();
         loading.value = false;
     }
+};
+
+// Открытие модального окна с отчетом
+const showReport = () => {
+    showReportModal.value = true;
+};
+
+// Закрытие модального окна
+const closeReport = () => {
+    showReportModal.value = false;
+    chosenReportId.value = null;
+    showReportLink.value = false;
 };
 
 // Загрузка списка дисциплин при монтировании компонента
@@ -302,31 +320,23 @@ onMounted(getSubjectsList);
                 </PrimaryButton>
 
                 <transition name="fade">
-                    <svg
-                        v-if="loading"
-                        class="-ml-1 mr-3 size-7 animate-spin text-gray-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
+                    <button
+                        v-if="showReportLink"
+                        class="btn btn-link flex items-center gap-2 text-blue-600"
+                        @click.prevent="showReport"
                     >
-                        <circle
-                            class="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            stroke-width="4"
-                        />
-                        <path
-                            class="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                    </svg>
+                        Перейти к отчету
+                    </button>
                 </transition>
             </div>
         </transition>
     </div>
+
+    <ShowReportModal
+        :id="chosenReportId"
+        :show="showReportModal"
+        @close-modal="closeReport"
+    />
 </template>
 
 <style scoped>
