@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Report\DestroyReportRequest;
 use App\Http\Requests\Report\EditReportRequest;
+use App\Http\Requests\Report\ExportReportRequest;
 use App\Http\Requests\Report\ShowReportRequest;
 use App\Http\Requests\Report\StoreReportRequest;
 use App\Http\Resources\ReportResource;
 use App\Repositories\ReportRepository;
 use App\Services\ReportService;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReportController extends Controller
 {
@@ -144,6 +147,18 @@ class ReportController extends Controller
                 ],
             ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Экспорт отчета в Word-документ
+     *
+     * @param ExportReportRequest $request
+     * @return BinaryFileResponse
+     * @throws \PhpOffice\PhpWord\Exception\Exception
+     */
+    public function export(ExportReportRequest $request): BinaryFileResponse
+    {
+        return ReportService::export($request->id);
     }
 
     /**

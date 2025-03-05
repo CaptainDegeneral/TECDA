@@ -68,6 +68,7 @@ Route::middleware(['auth'])->group(function () {
         ->group(function () {
             Route::get('/', 'index',)->name('index');
             Route::get('{report}', 'show')->name('show');
+            Route::get('{report}/export', 'export')->name('export');
             Route::post('/', 'store')->name('store');
             Route::put('{report}', 'edit')->name('edit');
             Route::delete('{report}', 'destroy')->name('destroy');

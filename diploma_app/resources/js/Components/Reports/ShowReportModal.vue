@@ -1,11 +1,11 @@
 <script setup>
 import Modal from '@/Components/Modal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import { computed, ref, watch } from 'vue';
-import { getReport } from '@/api/reports.js';
-import NProgress from 'nprogress';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
+import { computed, ref, watch } from 'vue';
+import { getReport, exportReport } from '@/api/reports.js';
+import NProgress from 'nprogress';
 import { useNotificationStore } from '@/Store/NotificationStore.js';
 
 const emit = defineEmits(['closeModal', 'created']);
@@ -20,6 +20,7 @@ const { addNotification } = notification;
 
 const report = ref(null);
 const loading = ref(false);
+const downloading = ref(false);
 
 const parsedData = computed(() => {
     if (report.value && report.value.data) {
@@ -53,13 +54,24 @@ const getReportData = async () => {
         loading.value = true;
 
         const { data } = await getReport(props.id);
-
         report.value = data;
     } catch (exception) {
         addNotification('error', 'При загрузке отчета произошла ошибка');
     } finally {
         NProgress.done();
         loading.value = false;
+    }
+};
+
+const downloadReport = async () => {
+    downloading.value = true;
+    try {
+        await exportReport(props.id);
+        addNotification('success', 'Отчет успешно скачан');
+    } catch (error) {
+        addNotification('error', 'Ошибка при скачивании отчета');
+    } finally {
+        downloading.value = false;
     }
 };
 
@@ -87,11 +99,37 @@ watch(
                         {{ report.title }}
                     </h2>
                     <div class="flex flex-row items-center space-x-3">
-                        <primary-button @click=""> Скачать </primary-button>
-                        <danger-button @click=""> Удалить </danger-button>
-                        <secondary-button @click="closeModal">
-                            Отмена
-                        </secondary-button>
+                        <svg
+                            v-if="downloading"
+                            class="-ml-1 mr-2 size-6 animate-spin text-gray-500"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                            />
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                        </svg>
+                        <primary-button
+                            @click="downloadReport"
+                            :disabled="downloading"
+                        >
+                            {{ downloading ? 'Скачивание...' : 'Скачать' }}
+                        </primary-button>
+                        <danger-button @click="">Удалить</danger-button>
+                        <secondary-button @click="closeModal"
+                            >Отмена</secondary-button
+                        >
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -118,9 +156,7 @@ watch(
                                     v-for="row in finalResults.performanceTable"
                                     :key="row.discipline"
                                 >
-                                    <td class="w-1/3">
-                                        {{ row.discipline }}
-                                    </td>
+                                    <td class="w-1/3">{{ row.discipline }}</td>
                                     <td
                                         v-for="year in years"
                                         :key="year"
@@ -155,9 +191,7 @@ watch(
                                     v-for="row in finalResults.qualityTable"
                                     :key="row.discipline"
                                 >
-                                    <td class="w-1/3">
-                                        {{ row.discipline }}
-                                    </td>
+                                    <td class="w-1/3">{{ row.discipline }}</td>
                                     <td
                                         v-for="year in years"
                                         :key="year"

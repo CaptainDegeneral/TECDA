@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Report;
 use Illuminate\Pagination\LengthAwarePaginator;
+use RuntimeException;
 
 class ReportRepository
 {
@@ -52,7 +53,7 @@ class ReportRepository
             'user_id',
             'created_at',
             'updated_at'
-        ])->find($id);
+        ])->findOrFail($id);
 
         if ($report && $report->data) {
             $report->data = json_decode($report->data, true);
@@ -110,5 +111,16 @@ class ReportRepository
     public static function delete(int $id): ?bool
     {
         return Report::where('id', $id)->delete();
+    }
+
+    /**
+     * Получение декодированных данных отчета
+     * @param int $id
+     * @return array
+     */
+    public static function getReportData(int $id): array
+    {
+        $report = self::get($id);
+        return json_decode($report->data, true);
     }
 }
