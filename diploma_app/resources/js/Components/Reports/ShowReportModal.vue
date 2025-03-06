@@ -136,25 +136,21 @@ watch(
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <!-- Таблица успеваемости -->
                     <report-table
-                        title="Успеваемость"
+                        title="Успеваемость (%)"
                         :data="finalResults.performanceTable"
                         :years="years"
                     />
-                    <!-- Таблица качества -->
                     <report-table
-                        title="Качество образования"
+                        title="Качество образования (%)"
                         :data="finalResults.qualityTable"
                         :years="years"
                     />
-                    <!-- Таблица среднего балла -->
                     <report-table
                         title="Средний балл"
                         :data="finalResults.averageScoreTable"
                         :years="years"
                     />
-                    <!-- Таблица усреднённых показателей за все периоды -->
                     <overall-results-table :data="overallResults" />
                 </div>
             </section>

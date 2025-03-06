@@ -12,18 +12,18 @@ defineProps({
         <table class="table w-full">
             <thead>
                 <tr>
-                    <th class="w-1/4">Дисциплина</th>
-                    <th class="w-1/4">Успеваемость</th>
-                    <th class="w-1/4">Качество</th>
-                    <th class="w-1/4">Средний балл</th>
+                    <th class="w-auto">Дисциплина</th>
+                    <th class="w-1/6">Успеваемость (%)</th>
+                    <th class="w-1/6">Качество (%)</th>
+                    <th class="w-1/6">Средний балл</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="row in data" :key="row.discipline">
-                    <td class="w-1/4">{{ row.discipline }}</td>
-                    <td class="w-1/4">{{ row.avgPerformance || '—' }}</td>
-                    <td class="w-1/4">{{ row.avgQuality || '—' }}</td>
-                    <td class="w-1/4">{{ row.avgAverageScore || '—' }}</td>
+                    <td class="w-auto">{{ row.discipline }}</td>
+                    <td class="w-1/6">{{ row.avgPerformance || '—' }}</td>
+                    <td class="w-1/6">{{ row.avgQuality || '—' }}</td>
+                    <td class="w-1/6">{{ row.avgAverageScore || '—' }}</td>
                 </tr>
             </tbody>
         </table>

@@ -38,7 +38,8 @@ class SubjectRepository
         ]);
 
         $subjects = $subjects->map(function ($subject) {
-            $subject->code_name = $subject->code . ' ' . $subject->name;
+            $parts = array_filter([$subject->code, $subject->name], fn($value) => !empty($value));
+            $subject->code_name = $parts ? implode(' ', $parts) : null;
             return $subject;
         });
 
