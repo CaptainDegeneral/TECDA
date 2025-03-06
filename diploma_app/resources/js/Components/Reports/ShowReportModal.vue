@@ -3,6 +3,8 @@ import Modal from '@/Components/Modal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
+import ReportTable from '@/Components/Reports/ReportTable.vue';
+import OverallResultsTable from '@/Components/Reports/OverallResultsTable.vue';
 import { computed, ref, watch } from 'vue';
 import { getReport, exportReport } from '@/api/reports.js';
 import NProgress from 'nprogress';
@@ -35,6 +37,7 @@ const parsedData = computed(() => {
 });
 
 const finalResults = computed(() => parsedData.value.finalResults || {});
+const overallResults = computed(() => parsedData.value.overallResults || []);
 
 const years = computed(() => {
     if (
@@ -127,82 +130,32 @@ watch(
                             {{ downloading ? 'Скачивание...' : 'Скачать' }}
                         </primary-button>
                         <danger-button @click="">Удалить</danger-button>
-                        <secondary-button @click="closeModal"
-                            >Отмена</secondary-button
-                        >
+                        <secondary-button @click="closeModal">
+                            Отмена
+                        </secondary-button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <!-- Таблица успеваемости -->
-                    <div class="mb-6">
-                        <h3 class="mb-4 text-lg font-medium text-gray-700">
-                            Успеваемость
-                        </h3>
-                        <table class="table w-full">
-                            <thead>
-                                <tr>
-                                    <th class="w-1/3">Дисциплина</th>
-                                    <th
-                                        v-for="year in years"
-                                        :key="year"
-                                        class="w-[calc(66.66%/5)]"
-                                    >
-                                        {{ year }}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="row in finalResults.performanceTable"
-                                    :key="row.discipline"
-                                >
-                                    <td class="w-1/3">{{ row.discipline }}</td>
-                                    <td
-                                        v-for="year in years"
-                                        :key="year"
-                                        class="w-[calc(66.66%/5)]"
-                                    >
-                                        {{ row[year] || '-' }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <report-table
+                        title="Успеваемость"
+                        :data="finalResults.performanceTable"
+                        :years="years"
+                    />
                     <!-- Таблица качества -->
-                    <div>
-                        <h3 class="mb-4 text-lg font-medium text-gray-700">
-                            Качество образования
-                        </h3>
-                        <table class="table w-full">
-                            <thead>
-                                <tr>
-                                    <th class="w-1/3">Дисциплина</th>
-                                    <th
-                                        v-for="year in years"
-                                        :key="year"
-                                        class="w-[calc(66.66%/5)]"
-                                    >
-                                        {{ year }}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="row in finalResults.qualityTable"
-                                    :key="row.discipline"
-                                >
-                                    <td class="w-1/3">{{ row.discipline }}</td>
-                                    <td
-                                        v-for="year in years"
-                                        :key="year"
-                                        class="w-[calc(66.66%/5)]"
-                                    >
-                                        {{ row[year] || '-' }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <report-table
+                        title="Качество образования"
+                        :data="finalResults.qualityTable"
+                        :years="years"
+                    />
+                    <!-- Таблица среднего балла -->
+                    <report-table
+                        title="Средний балл"
+                        :data="finalResults.averageScoreTable"
+                        :years="years"
+                    />
+                    <!-- Таблица усреднённых показателей за все периоды -->
+                    <overall-results-table :data="overallResults" />
                 </div>
             </section>
         </div>
