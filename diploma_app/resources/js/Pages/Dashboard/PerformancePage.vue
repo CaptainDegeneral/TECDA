@@ -1,15 +1,21 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { createReport } from '@/api/reports.js'; // Убираем exportReport
-import NProgress from 'nprogress';
+import { createReport } from '@/api/reports.js';
 import { getSubjectsCodeList } from '@/api/subjects.js';
+import NProgress from 'nprogress';
 import { useNotificationStore } from '@/Store/NotificationStore.js';
 import { handleApiError } from '@/Utils/errorHandler.js';
 import {
-    calculatePerformance,
-    calculateQuality,
-} from '@/Utils/calculations.js';
-import { sanitizeData, getEnhancedTabsData } from '@/Utils/dataProcessing.js';
+    calculateIntermediateResults,
+    calculateFinalResults,
+    calculateOverallResults,
+} from '@/Utils/resultsCalculations.js';
+import {
+    generateTabs,
+    createEmptyRow,
+    collectReportData,
+} from '@/Utils/dataProcessing.js';
+import { hasInvalidNulls } from '@/Utils/validation.js';
 
 import InitialConfiguration from '@/Pages/Dashboard/PerfomancePage/InitialConfiguration.vue';
 import MainConfiguration from '@/Pages/Dashboard/PerfomancePage/MainConfiguration.vue';
@@ -33,29 +39,9 @@ const showIntermediateResults = ref(false);
 const disciplines = ref([]);
 const tabsData = ref([]);
 const loading = ref(false);
-const showReportModal = ref(false); // Для управления модальным окном
-const chosenReportId = ref(null); // ID выбранного отчета
-const showReportLink = ref(false); // Для отображения кнопки "Перейти к отчету"
-
-// Создание пустой строки таблицы
-const createEmptyRow = () => ({
-    discipline: '',
-    group: '',
-    students: 0,
-    fives: 0,
-    fours: 0,
-    threes: 0,
-});
-
-// Генерация вкладок на основе конфигурации
-const generateTabs = () => {
-    const tabsCount = Math.min(yearsOfWork.value, 5);
-    tabsData.value = Array.from({ length: tabsCount }, (_, index) => ({
-        label: `${startYear.value + index}-${startYear.value + index + 1}`,
-        autumnWinter: [createEmptyRow()],
-        springSummer: [createEmptyRow()],
-    }));
-};
+const showReportModal = ref(false);
+const chosenReportId = ref(null);
+const showReportLink = ref(false);
 
 // Разблокировка основной конфигурации
 const unlockMainConfiguration = (isValid) => {
@@ -63,7 +49,7 @@ const unlockMainConfiguration = (isValid) => {
         addNotification('error', 'Пожалуйста, заполните все поля корректно');
         return;
     }
-    generateTabs();
+    tabsData.value = generateTabs(yearsOfWork.value, startYear.value);
     isConfigured.value = true;
 };
 
@@ -89,115 +75,33 @@ const toggleFinalResults = () => {
 
 // Вычисление промежуточных результатов
 const intermediateResults = computed(() => {
-    return tabsData.value.map((tab) => {
-        const allRows = [...tab.autumnWinter, ...tab.springSummer];
-        const disciplineMap = {};
-
-        allRows.forEach((row) => {
-            const discKey = row.discipline ? row.discipline.code_name : null;
-            if (discKey) {
-                if (!disciplineMap[discKey]) {
-                    disciplineMap[discKey] = {
-                        performance: [],
-                        quality: [],
-                    };
-                }
-                const perf = parseFloat(calculatePerformance(row));
-                const qual = parseFloat(calculateQuality(row));
-                if (!isNaN(perf) && perf !== null) {
-                    disciplineMap[discKey].performance.push(perf);
-                }
-                if (!isNaN(qual) && qual !== null) {
-                    disciplineMap[discKey].quality.push(qual);
-                }
-            }
-        });
-
-        return Object.entries(disciplineMap).map(([discKey, data]) => ({
-            discipline: discKey,
-            performance: data.performance.length
-                ? (
-                      data.performance.reduce((sum, val) => sum + val, 0) /
-                      data.performance.length
-                  ).toFixed(2)
-                : null,
-            quality: data.quality.length
-                ? (
-                      data.quality.reduce((sum, val) => sum + val, 0) /
-                      data.quality.length
-                  ).toFixed(2)
-                : null,
-        }));
-    });
+    return calculateIntermediateResults(tabsData.value);
 });
 
 // Вычисление конечных результатов
 const finalResults = computed(() => {
-    const allDisciplines = new Set();
-    intermediateResults.value.forEach((tabResults) => {
-        tabResults.forEach((result) => allDisciplines.add(result.discipline));
-    });
+    return calculateFinalResults(tabsData.value, intermediateResults.value);
+});
 
-    const disciplinesList = Array.from(allDisciplines);
-    const createTable = (prop) => {
-        return disciplinesList.map((discipline) => {
-            const row = { discipline };
-            tabsData.value.forEach((tab, index) => {
-                const result = intermediateResults.value[index].find(
-                    (r) => r.discipline === discipline,
-                );
-                row[tab.label] = result ? result[prop] : null;
-            });
-            return row;
-        });
-    };
-
-    return {
-        performanceTable: createTable('performance'),
-        qualityTable: createTable('quality'),
-    };
+// Вычисление общих результатов
+const overallResults = computed(() => {
+    return calculateOverallResults(intermediateResults.value);
 });
 
 // Сбор всех данных для отчета
-const collectAllData = () => {
-    const data = {
-        configuration: {
-            category: category.value || null,
-            yearsOfWork: yearsOfWork.value > 0 ? yearsOfWork.value : null,
-            startYear: startYear.value > 0 ? startYear.value : null,
+const collectedData = computed(() => {
+    return collectReportData(
+        {
+            category: category.value,
+            yearsOfWork: yearsOfWork.value,
+            startYear: startYear.value,
         },
-        tabsData: getEnhancedTabsData(tabsData.value),
-        intermediateResults: intermediateResults.value,
-        finalResults: finalResults.value,
-    };
-    return JSON.stringify(sanitizeData(data), null, 2);
-};
-
-// Вычисляемое свойство для собранных данных
-const collectedData = computed(() => collectAllData());
-
-// Проверка на наличие недопустимых значений (null или '0.00')
-const hasInvalidNulls = (data) => {
-    const parsedData = JSON.parse(data);
-    const checkForInvalidValues = (obj, path = []) => {
-        if (path.length === 1 && path[0] === 'finalResults') return false;
-
-        if (Array.isArray(obj)) {
-            return obj.some((item, index) =>
-                checkForInvalidValues(item, [...path, index]),
-            );
-        }
-
-        if (obj !== null && typeof obj === 'object') {
-            return Object.entries(obj).some(([key, value]) =>
-                checkForInvalidValues(value, [...path, key]),
-            );
-        }
-
-        return obj === null || obj === '0.00';
-    };
-    return checkForInvalidValues(parsedData);
-};
+        tabsData.value,
+        intermediateResults.value,
+        finalResults.value,
+        overallResults.value,
+    );
+});
 
 // Получение списка дисциплин
 const getSubjectsList = async () => {
@@ -308,6 +212,7 @@ onMounted(getSubjectsList);
                 v-if="isConfigured"
                 :tabs-data="tabsData"
                 :final-results="finalResults"
+                :overall-results="overallResults"
                 :show-final-results="showFinalResults"
                 @toggle-final-results="toggleFinalResults"
             />

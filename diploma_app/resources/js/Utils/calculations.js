@@ -4,7 +4,7 @@
  * @param {number} decimals - Количество знаков после запятой.
  * @returns {string} Округленное число как строка.
  */
-const roundToDecimal = (number, decimals) => {
+export const roundToDecimal = (number, decimals) => {
     const factor = Math.pow(10, decimals);
     return (Math.round(number * factor) / factor).toFixed(decimals);
 };
@@ -22,15 +22,14 @@ export const calculateTotalGrades = (row) => {
 
 /**
  * Вычисляет процент успеваемости для заданной строки.
- * @param {Object} row - Данные строки, содержащие оценки (пятёрки, четвёрки, тройки).
+ * @param {Object} row - Данные строки, содержащие оценки и количество студентов.
  * @returns {string|null} Процент успеваемости, округленный до 2 знаков после запятой, или null, если данные недействительны.
  */
 export const calculatePerformance = (row) => {
-    if (!row.discipline) return null;
-    const total = calculateTotalGrades(row);
-    if (!total) return null;
-    const value =
-        ((row.fives * 5 + row.fours * 4 + row.threes * 3) / (total * 5)) * 100;
+    if (!row.discipline || row.students === 0) return null;
+    const totalGrades = calculateTotalGrades(row);
+    if (totalGrades === null) return null;
+    const value = (totalGrades / row.students) * 100;
     return roundToDecimal(value, 2);
 };
 
@@ -40,8 +39,21 @@ export const calculatePerformance = (row) => {
  * @returns {string|null} Процент качества, округленный до 2 знаков после запятой, или null, если данные недействительны.
  */
 export const calculateQuality = (row) => {
-    if (!row.discipline) return null;
-    if (row.students === 0) return null;
+    if (!row.discipline || row.students === 0) return null;
     const value = ((row.fives + row.fours) / row.students) * 100;
+    return roundToDecimal(value, 2);
+};
+
+/**
+ * Вычисляет средний балл для заданной строки.
+ * @param {Object} row - Данные строки, содержащие оценки (пятёрки, четвёрки, тройки).
+ * @returns {string|null} Средний балл, округленный до 2 знаков после запятой, или null, если данные недействительны.
+ */
+export const calculateAverageScore = (row) => {
+    const totalGrades = calculateTotalGrades(row);
+    if (!row.discipline || totalGrades === null || totalGrades === 0)
+        return null;
+    const weightedSum = row.fives * 5 + row.fours * 4 + row.threes * 3;
+    const value = weightedSum / totalGrades;
     return roundToDecimal(value, 2);
 };

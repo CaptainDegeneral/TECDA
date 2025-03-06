@@ -1,6 +1,12 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue';
 import SelectSearch from '@/Components/SelectSearch.vue';
+import {
+    calculateTotalGrades,
+    calculatePerformance,
+    calculateQuality,
+    calculateAverageScore,
+} from '@/Utils/calculations.js';
 
 const props = defineProps({
     rows: Array,
@@ -18,26 +24,6 @@ const handleAdd = () => {
 
 const handleDelete = (rowIndex) => {
     emit('deleteRow', props.semesterKey, props.tabIndex, rowIndex);
-};
-
-const calculateTotalGrades = (row) => {
-    return row.fives + row.fours + row.threes;
-};
-
-const calculatePerformance = (row) => {
-    const total = calculateTotalGrades(row);
-    return total === 0
-        ? '0.00'
-        : (
-              ((row.fives * 5 + row.fours * 4 + row.threes * 3) / (total * 5)) *
-              100
-          ).toFixed(2);
-};
-
-const calculateQuality = (row) => {
-    return row.students === 0
-        ? '0.00'
-        : (((row.fives + row.fours) / row.students) * 100).toFixed(2);
 };
 </script>
 
@@ -113,6 +99,7 @@ const calculateQuality = (row) => {
                     <td>{{ calculateTotalGrades(row) }}</td>
                     <td>{{ calculatePerformance(row) }}</td>
                     <td>{{ calculateQuality(row) }}</td>
+                    <td>{{ calculateAverageScore(row) }}</td>
                     <td>
                         <button
                             @click="handleDelete(rowIndex)"

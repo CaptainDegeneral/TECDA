@@ -1,4 +1,5 @@
 import {
+    calculateAverageScore,
     calculatePerformance,
     calculateQuality,
     calculateTotalGrades,
@@ -29,7 +30,7 @@ export const sanitizeData = (data) => {
 };
 
 /**
- * Финализирует данные вкладок, добавляя вычисленные общее количество оценок, успеваемость и качество для каждой строки.
+ * Финализирует данные вкладок, добавляя вычисленные общее количество оценок, успеваемость, качество и средний балл для каждой строки.
  * @param {Array} tabsData - Массив данных вкладок, содержащий строки для осенне-зимнего и весенне-летнего семестров.
  * @returns {Array} Обогащенные данные вкладок с вычисленными значениями.
  */
@@ -41,12 +42,72 @@ export const getEnhancedTabsData = (tabsData) => {
             totalGrades: calculateTotalGrades(row),
             performance: calculatePerformance(row),
             quality: calculateQuality(row),
+            averageScore: calculateAverageScore(row),
         })),
         springSummer: tab.springSummer.map((row) => ({
             ...row,
             totalGrades: calculateTotalGrades(row),
             performance: calculatePerformance(row),
             quality: calculateQuality(row),
+            averageScore: calculateAverageScore(row),
         })),
     }));
+};
+
+/**
+ * Создаёт пустую строку для таблицы семестра.
+ * @returns {Object} Пустая строка с начальными значениями.
+ */
+export const createEmptyRow = () => ({
+    discipline: '',
+    group: '',
+    students: 0,
+    fives: 0,
+    fours: 0,
+    threes: 0,
+});
+
+/**
+ * Генерирует вкладки на основе конфигурации.
+ * @param {number} yearsOfWork - Количество лет работы.
+ * @param {number} startYear - Стартовый год.
+ * @returns {Array} Массив вкладок с семестрами.
+ */
+export const generateTabs = (yearsOfWork, startYear) => {
+    const tabsCount = Math.min(yearsOfWork, 5);
+    return Array.from({ length: tabsCount }, (_, index) => ({
+        label: `${startYear + index}-${startYear + index + 1}`,
+        autumnWinter: [createEmptyRow()],
+        springSummer: [createEmptyRow()],
+    }));
+};
+
+/**
+ * Собирает все данные для отчета.
+ * @param {Object} config - Конфигурация (category, yearsOfWork, startYear).
+ * @param {Array} tabsData - Данные вкладок.
+ * @param {Array} intermediateResults - Промежуточные результаты.
+ * @param {Object} finalResults - Конечные результаты.
+ * @param {Array} overallResults - Общие результаты.
+ * @returns {string} JSON-строка с очищенными данными.
+ */
+export const collectReportData = (
+    config,
+    tabsData,
+    intermediateResults,
+    finalResults,
+    overallResults,
+) => {
+    const data = {
+        configuration: {
+            category: config.category || null,
+            yearsOfWork: config.yearsOfWork > 0 ? config.yearsOfWork : null,
+            startYear: config.startYear > 0 ? config.startYear : null,
+        },
+        tabsData: getEnhancedTabsData(tabsData),
+        intermediateResults,
+        finalResults,
+        overallResults,
+    };
+    return JSON.stringify(sanitizeData(data), null, 2);
 };

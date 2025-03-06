@@ -48,9 +48,10 @@ const emit = defineEmits(['update:activeTab', 'toggleIntermediateResults']);
                     <table class="table w-full">
                         <thead>
                             <tr>
-                                <th class="w-1/2">Дисциплина</th>
+                                <th class="w-1/4">Дисциплина</th>
                                 <th class="w-1/4">Успеваемость (%)</th>
                                 <th class="w-1/4">Качество (%)</th>
+                                <th class="w-1/4">Средний балл</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -60,9 +61,10 @@ const emit = defineEmits(['update:activeTab', 'toggleIntermediateResults']);
                                 ]"
                                 :key="rowIndex"
                             >
-                                <td class="w-1/2">{{ row.discipline }}</td>
+                                <td class="w-1/4">{{ row.discipline }}</td>
                                 <td class="w-1/4">{{ row.performance }}</td>
                                 <td class="w-1/4">{{ row.quality }}</td>
+                                <td class="w-1/4">{{ row.averageScore }}</td>
                             </tr>
                         </tbody>
                     </table>
