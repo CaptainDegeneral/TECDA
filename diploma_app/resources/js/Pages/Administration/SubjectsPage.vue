@@ -139,8 +139,12 @@ onMounted(getSubjectsList);
                 </thead>
                 <tbody>
                     <tr v-for="subject in subjects" :key="subject.id">
-                        <td>{{ subject.name }}</td>
-                        <td>{{ subject.code }}</td>
+                        <td :class="subject.name ? '' : 'italic text-gray-400'">
+                            {{ subject.name || 'Не задано' }}
+                        </td>
+                        <td :class="subject.code ? '' : 'italic text-gray-400'">
+                            {{ subject.code || 'Не задано' }}
+                        </td>
                         <td>
                             <div class="flex flex-row items-center justify-end">
                                 <button

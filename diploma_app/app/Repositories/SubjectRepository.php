@@ -43,7 +43,7 @@ class SubjectRepository
             return $subject;
         });
 
-        $sorted = $subjects->sortByDesc('code_name');
+        $sorted = $subjects->sortBy('code_name');
 
         return $sorted->values();
     }
