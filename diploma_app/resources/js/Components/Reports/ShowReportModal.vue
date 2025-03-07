@@ -9,6 +9,7 @@ import { computed, ref, watch } from 'vue';
 import { getReport, exportReport } from '@/api/reports.js';
 import NProgress from 'nprogress';
 import { useNotificationStore } from '@/Store/NotificationStore.js';
+import { usePage } from '@inertiajs/vue3';
 
 const emit = defineEmits(['closeModal', 'created']);
 
@@ -19,6 +20,9 @@ const props = defineProps({
 
 const notification = useNotificationStore();
 const { addNotification } = notification;
+
+const page = usePage();
+const user = computed(() => page.props.auth.user);
 
 const report = ref(null);
 const loading = ref(false);
@@ -129,7 +133,9 @@ watch(
                         >
                             {{ downloading ? 'Скачивание...' : 'Скачать' }}
                         </primary-button>
-                        <danger-button @click="">Удалить</danger-button>
+                        <danger-button v-if="user.role_id === 1" @click="">
+                            Удалить
+                        </danger-button>
                         <secondary-button @click="closeModal">
                             Отмена
                         </secondary-button>
