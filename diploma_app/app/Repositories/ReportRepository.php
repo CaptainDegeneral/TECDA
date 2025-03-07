@@ -56,10 +56,29 @@ class ReportRepository
         ])->findOrFail($id);
 
         if ($report && $report->data) {
-            $report->data = json_decode($report->data, true);
+            if (is_string($report->data)) {
+                $decodedData = json_decode($report->data, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $report->setAttribute('data', $decodedData);
+                } else {
+                    \Log::error("Failed to decode report data for report ID: $id", ['data' => $report->data]);
+                    $report->setAttribute('data', []);
+                }
+            }
         }
 
         return $report;
+    }
+
+    /**
+     * Получение отчета с декодированными данными
+     * @param int $id
+     * @return array
+     */
+    public static function getReportData(int $id): array
+    {
+        $report = self::get($id);
+        return $report->toArray();
     }
 
     /**
@@ -111,16 +130,5 @@ class ReportRepository
     public static function delete(int $id): ?bool
     {
         return Report::where('id', $id)->delete();
-    }
-
-    /**
-     * Получение декодированных данных отчета
-     * @param int $id
-     * @return array
-     */
-    public static function getReportData(int $id): array
-    {
-        $report = self::get($id);
-        return json_decode($report->data, true);
     }
 }

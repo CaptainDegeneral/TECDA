@@ -58,8 +58,17 @@ class ReportService
      */
     public static function export(int $reportId): BinaryFileResponse
     {
-        $report = ReportRepository::get($reportId);
-        $reportData = ReportRepository::getReportData($reportId);
-        return ReportExporter::export($reportData, $report->id, $report->title);
+        $report = ReportRepository::getReportData($reportId);
+
+        if (isset($report['data']) && is_string($report['data'])) {
+            $decodedData = json_decode($report['data'], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $report['data'] = $decodedData;
+            } else {
+                $report['data'] = [];
+            }
+        }
+
+        return ReportExporter::export($report, $report['title']);
     }
 }
