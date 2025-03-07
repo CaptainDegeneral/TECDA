@@ -10,6 +10,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update:activeTab', 'addRow', 'deleteRow']);
 
+const handleDelete = (event) => {
+    emit('deleteRow', event);
+};
+
 const semesterTableHeaders = [
     'Дисциплина',
     'Группа',
@@ -58,10 +62,11 @@ const semesterTableHeaders = [
                 :disciplines="disciplines"
                 :tableHeaders="semesterTableHeaders"
                 @addRow="emit('addRow', 'autumnWinter', tabIndex)"
-                @deleteRow="emit('deleteRow', 'autumnWinter', tabIndex, $event)"
+                @deleteRow="handleDelete"
             >
                 <template #title>Осенне-зимний семестр</template>
             </SemesterTable>
+
             <SemesterTable
                 :rows="tab.springSummer"
                 :tabIndex="tabIndex"
@@ -69,7 +74,7 @@ const semesterTableHeaders = [
                 :disciplines="disciplines"
                 :tableHeaders="semesterTableHeaders"
                 @addRow="emit('addRow', 'springSummer', tabIndex)"
-                @deleteRow="emit('deleteRow', 'springSummer', tabIndex, $event)"
+                @deleteRow="handleDelete"
             >
                 <template #title>Весенне-летний семестр</template>
             </SemesterTable>

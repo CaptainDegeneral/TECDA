@@ -59,8 +59,9 @@ const addRow = (semester, tabIndex) => {
 };
 
 // Удаление строки из таблицы семестра
-const deleteRow = (semester, tabIndex, rowIndex) => {
-    tabsData.value[tabIndex][semester].splice(rowIndex, 1);
+const deleteRow = (event) => {
+    console.log(event);
+    tabsData.value[event.tab][event.semester].splice(event.index, 1);
 };
 
 // Переключение видимости промежуточных результатов

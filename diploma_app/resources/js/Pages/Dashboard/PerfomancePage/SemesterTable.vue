@@ -27,7 +27,11 @@ const handleAdd = () => {
 };
 
 const handleDelete = (rowIndex) => {
-    emit('deleteRow', props.semesterKey, props.tabIndex, rowIndex);
+    emit('deleteRow', {
+        semester: props.semesterKey,
+        tab: props.tabIndex,
+        index: rowIndex,
+    });
 };
 
 const checkGradesExceedStudents = (row) => {
