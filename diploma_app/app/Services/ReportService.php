@@ -51,10 +51,11 @@ class ReportService
     }
 
     /**
-     * Экспортирует отчет в Word-документ
+     * Экспортирует отчет в Word и Excel, возвращает архив.
+     *
      * @param int $reportId
      * @return BinaryFileResponse
-     * @throws Exception
+     * @throws \Exception
      */
     public static function export(int $reportId): BinaryFileResponse
     {
