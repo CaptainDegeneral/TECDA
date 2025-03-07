@@ -36,12 +36,12 @@ export const sanitizeData = (data) => {
  * @returns {string} Отформатированная строка.
  */
 const formatNumberString = (decimal) => {
-    const str = decimal.toFixed(2); // Сначала фиксируем до 2 знаков
+    const str = decimal.toFixed(2);
     if (str.endsWith('.00')) {
-        return str.slice(0, -3); // Убираем .00 для целых чисел
+        return str.slice(0, -3);
     }
     if (str.endsWith('0')) {
-        return str.slice(0, -1); // Убираем последний ноль, если он незначащий
+        return str.slice(0, -1);
     }
     return str;
 };

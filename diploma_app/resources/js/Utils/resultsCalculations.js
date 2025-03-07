@@ -3,7 +3,7 @@ import {
     calculatePerformance,
     calculateQuality,
 } from '@/Utils/calculations.js';
-
+import { ROUNDING_PRECISION } from '@/Utils/constants.js';
 import Decimal from 'decimal.js';
 
 /**
@@ -38,19 +38,25 @@ export const calculateIntermediateResults = (tabsData) => {
         });
 
         return Object.entries(disciplineMap).map(([discKey, data]) => {
-            const calcAverage = (values) =>
+            const calcAverage = (values, decimals) =>
                 values.length
                     ? values
                           .reduce((sum, val) => sum.plus(val), new Decimal(0))
                           .dividedBy(values.length)
-                          .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+                          .toDecimalPlaces(decimals, Decimal.ROUND_HALF_UP)
                     : null;
 
             return {
                 discipline: discKey,
-                performance: calcAverage(data.performance),
-                quality: calcAverage(data.quality),
-                averageScore: calcAverage(data.averageScore),
+                performance: calcAverage(
+                    data.performance,
+                    ROUNDING_PRECISION.PERFORMANCE,
+                ),
+                quality: calcAverage(data.quality, ROUNDING_PRECISION.QUALITY),
+                averageScore: calcAverage(
+                    data.averageScore,
+                    ROUNDING_PRECISION.AVERAGE_SCORE,
+                ),
             };
         });
     });
@@ -118,19 +124,25 @@ export const calculateOverallResults = (intermediateResults) => {
             }
         });
 
-        const calcAverage = (values) =>
+        const calcAverage = (values, decimals) =>
             values.length
                 ? values
                       .reduce((sum, val) => sum.plus(val), new Decimal(0))
                       .dividedBy(values.length)
-                      .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+                      .toDecimalPlaces(decimals, Decimal.ROUND_HALF_UP)
                 : null;
 
         return {
             discipline,
-            avgPerformance: calcAverage(performanceValues),
-            avgQuality: calcAverage(qualityValues),
-            avgAverageScore: calcAverage(averageScoreValues),
+            avgPerformance: calcAverage(
+                performanceValues,
+                ROUNDING_PRECISION.PERFORMANCE,
+            ),
+            avgQuality: calcAverage(qualityValues, ROUNDING_PRECISION.QUALITY),
+            avgAverageScore: calcAverage(
+                averageScoreValues,
+                ROUNDING_PRECISION.AVERAGE_SCORE,
+            ),
         };
     });
 };

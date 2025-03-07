@@ -1,3 +1,4 @@
+import { ROUNDING_PRECISION } from '@/Utils/constants.js';
 import Decimal from 'decimal.js';
 
 /**
@@ -38,7 +39,7 @@ export const calculatePerformance = (row) => {
     return totalGrades
         .dividedBy(students)
         .times(100)
-        .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+        .toDecimalPlaces(ROUNDING_PRECISION.PERFORMANCE, Decimal.ROUND_HALF_UP);
 };
 
 /**
@@ -56,7 +57,7 @@ export const calculateQuality = (row) => {
         .plus(fours)
         .dividedBy(students)
         .times(100)
-        .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+        .toDecimalPlaces(ROUNDING_PRECISION.QUALITY, Decimal.ROUND_HALF_UP);
 };
 
 /**
@@ -77,5 +78,8 @@ export const calculateAverageScore = (row) => {
         .plus(threes.times(3));
     return weightedSum
         .dividedBy(totalGrades)
-        .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+        .toDecimalPlaces(
+            ROUNDING_PRECISION.AVERAGE_SCORE,
+            Decimal.ROUND_HALF_UP,
+        );
 };

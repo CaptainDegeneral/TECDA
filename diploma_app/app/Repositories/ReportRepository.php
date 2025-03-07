@@ -4,7 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Report;
 use Illuminate\Pagination\LengthAwarePaginator;
-use RuntimeException;
+use Log;
 
 class ReportRepository
 {
@@ -61,7 +61,6 @@ class ReportRepository
                 if (json_last_error() === JSON_ERROR_NONE) {
                     $report->setAttribute('data', $decodedData);
                 } else {
-                    \Log::error("Failed to decode report data for report ID: $id", ['data' => $report->data]);
                     $report->setAttribute('data', []);
                 }
             }
