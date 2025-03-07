@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, watch } from 'vue';
 import SelectSearch from '@/Components/SelectSearch.vue';
 import {
     calculateTotalGrades,
@@ -7,6 +7,7 @@ import {
     calculateQuality,
     calculateAverageScore,
 } from '@/Utils/calculations.js';
+import { useNotificationStore } from '@/Store/NotificationStore.js';
 
 const props = defineProps({
     rows: Array,
@@ -18,6 +19,9 @@ const props = defineProps({
 
 const emit = defineEmits(['addRow', 'deleteRow']);
 
+const notification = useNotificationStore();
+const { addNotification } = notification;
+
 const handleAdd = () => {
     emit('addRow', props.semesterKey, props.tabIndex);
 };
@@ -25,6 +29,37 @@ const handleAdd = () => {
 const handleDelete = (rowIndex) => {
     emit('deleteRow', props.semesterKey, props.tabIndex, rowIndex);
 };
+
+const checkGradesExceedStudents = (row) => {
+    const totalGrades = calculateTotalGrades(row);
+    const students = row.students || 0;
+
+    if (
+        row.discipline &&
+        row.group &&
+        totalGrades !== null &&
+        students > 0 &&
+        totalGrades > students
+    ) {
+        const disciplineName =
+            row.discipline.code_name || 'Неизвестная дисциплина';
+        const groupName = row.group || 'Неизвестная группа';
+        addNotification(
+            'warning',
+            `Внимание! В группе "${groupName}" по дисциплине "${disciplineName}" количество оценок (${totalGrades}) превышает количество студентов (${students}).`,
+        );
+    }
+};
+
+watch(
+    () => props.rows,
+    (newRows) => {
+        newRows.forEach((row) => {
+            checkGradesExceedStudents(row);
+        });
+    },
+    { deep: true, immediate: true },
+);
 </script>
 
 <template>
