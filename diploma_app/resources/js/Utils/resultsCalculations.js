@@ -2,8 +2,9 @@ import {
     calculateAverageScore,
     calculatePerformance,
     calculateQuality,
-    roundToDecimal,
 } from '@/Utils/calculations.js';
+
+import Decimal from 'decimal.js';
 
 /**
  * Вычисляет промежуточные результаты на основе данных вкладок.
@@ -25,45 +26,33 @@ export const calculateIntermediateResults = (tabsData) => {
                         averageScore: [],
                     };
                 }
-                const perf = parseFloat(calculatePerformance(row));
-                const qual = parseFloat(calculateQuality(row));
-                const avgScore = parseFloat(calculateAverageScore(row));
-                if (!isNaN(perf) && perf !== null) {
+                const perf = calculatePerformance(row);
+                const qual = calculateQuality(row);
+                const avgScore = calculateAverageScore(row);
+                if (perf !== null)
                     disciplineMap[discKey].performance.push(perf);
-                }
-                if (!isNaN(qual) && qual !== null) {
-                    disciplineMap[discKey].quality.push(qual);
-                }
-                if (!isNaN(avgScore) && avgScore !== null) {
+                if (qual !== null) disciplineMap[discKey].quality.push(qual);
+                if (avgScore !== null)
                     disciplineMap[discKey].averageScore.push(avgScore);
-                }
             }
         });
 
-        return Object.entries(disciplineMap).map(([discKey, data]) => ({
-            discipline: discKey,
-            performance: data.performance.length
-                ? roundToDecimal(
-                      data.performance.reduce((sum, val) => sum + val, 0) /
-                          data.performance.length,
-                      2,
-                  )
-                : null,
-            quality: data.quality.length
-                ? roundToDecimal(
-                      data.quality.reduce((sum, val) => sum + val, 0) /
-                          data.quality.length,
-                      2,
-                  )
-                : null,
-            averageScore: data.averageScore.length
-                ? roundToDecimal(
-                      data.averageScore.reduce((sum, val) => sum + val, 0) /
-                          data.averageScore.length,
-                      2,
-                  )
-                : null,
-        }));
+        return Object.entries(disciplineMap).map(([discKey, data]) => {
+            const calcAverage = (values) =>
+                values.length
+                    ? values
+                          .reduce((sum, val) => sum.plus(val), new Decimal(0))
+                          .dividedBy(values.length)
+                          .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+                    : null;
+
+            return {
+                discipline: discKey,
+                performance: calcAverage(data.performance),
+                quality: calcAverage(data.quality),
+                averageScore: calcAverage(data.averageScore),
+            };
+        });
     });
 };
 
@@ -87,7 +76,8 @@ export const calculateFinalResults = (tabsData, intermediateResults) => {
                 const result = intermediateResults[index].find(
                     (r) => r.discipline === discipline,
                 );
-                row[tab.label] = result ? result[prop] : null;
+                row[tab.label] =
+                    result && result[prop] !== null ? result[prop] : null;
             });
             return row;
         });
@@ -116,47 +106,31 @@ export const calculateOverallResults = (intermediateResults) => {
         const performanceValues = [];
         const qualityValues = [];
         const averageScoreValues = [];
+
         intermediateResults.forEach((tabResults) => {
             const result = tabResults.find((r) => r.discipline === discipline);
-            if (result && result.performance !== null) {
-                performanceValues.push(parseFloat(result.performance));
-            }
-            if (result && result.quality !== null) {
-                qualityValues.push(parseFloat(result.quality));
-            }
-            if (result && result.averageScore !== null) {
-                averageScoreValues.push(parseFloat(result.averageScore));
+            if (result) {
+                if (result.performance !== null)
+                    performanceValues.push(result.performance);
+                if (result.quality !== null) qualityValues.push(result.quality);
+                if (result.averageScore !== null)
+                    averageScoreValues.push(result.averageScore);
             }
         });
-        const avgPerformance =
-            performanceValues.length > 0
-                ? roundToDecimal(
-                      performanceValues.reduce((sum, val) => sum + val, 0) /
-                          performanceValues.length,
-                      2,
-                  )
+
+        const calcAverage = (values) =>
+            values.length
+                ? values
+                      .reduce((sum, val) => sum.plus(val), new Decimal(0))
+                      .dividedBy(values.length)
+                      .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
                 : null;
-        const avgQuality =
-            qualityValues.length > 0
-                ? roundToDecimal(
-                      qualityValues.reduce((sum, val) => sum + val, 0) /
-                          qualityValues.length,
-                      2,
-                  )
-                : null;
-        const avgAverageScore =
-            averageScoreValues.length > 0
-                ? roundToDecimal(
-                      averageScoreValues.reduce((sum, val) => sum + val, 0) /
-                          averageScoreValues.length,
-                      2,
-                  )
-                : null;
+
         return {
             discipline,
-            avgPerformance,
-            avgQuality,
-            avgAverageScore,
+            avgPerformance: calcAverage(performanceValues),
+            avgQuality: calcAverage(qualityValues),
+            avgAverageScore: calcAverage(averageScoreValues),
         };
     });
 };
