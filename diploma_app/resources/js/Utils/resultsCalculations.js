@@ -9,7 +9,7 @@ import Decimal from 'decimal.js';
 /**
  * Вычисляет промежуточные результаты на основе данных вкладок.
  * @param {Array} tabsData - Данные вкладок с семестрами.
- * @returns {Array} Массив промежуточных результатов по дисциплинам.
+ * @returns {Array} Массив промежуточных результатов по дисциплинам с Decimal значениями.
  */
 export const calculateIntermediateResults = (tabsData) => {
     return tabsData.map((tab) => {
