@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Exception;
+use InvalidArgumentException;
 use PhpOffice\PhpSpreadsheet\Chart\Axis;
 use PhpOffice\PhpSpreadsheet\Chart\AxisText;
 use PhpOffice\PhpSpreadsheet\Chart\Chart;
@@ -19,85 +20,153 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Throwable;
 
+/**
+ * Класс для экспорта отчетов в формат Excel.
+ */
 class ExcelReportExporter
 {
-    private const string DEFAULT_VALUE = '-';
-    private const int MIN_CHART_WIDTH_COLUMNS = 10;
-    private const int MIN_CHART_END_ROW = 25;
-    private const int CHART_START_ROW = 2;
-
-    private const array CHART_TYPES = [
-        'quality' => [
-            'sheetTitle' => 'QualityResults',
-            'chartTitle' => 'Качество знаний',
-            'dataRange' => '$B$2:$B$',
-            'categoryRange' => '$A$2:$A$',
-        ],
-        'averageScore' => [
-            'sheetTitle' => 'AverageScoreResults',
-            'chartTitle' => 'Средний балл',
-            'dataRange' => '$C$2:$C$',
-            'categoryRange' => '$A$2:$A$',
-        ],
-    ];
-
-    private const array PERIODS_CHART_TYPES = [
-        'quality' => [
-            'sheetTitle' => 'QualityPerPeriods',
-            'chartTitle' => 'Качество знаний по годам',
-            'isPercentage' => true,
-            'tableTitle' => 'Качество знаний',
-            'tableKey' => 'qualityTable',
-        ],
-        'averageScore' => [
-            'sheetTitle' => 'AverageScorePerPeriods',
-            'chartTitle' => 'Средний балл по годам',
-            'isPercentage' => false,
-            'tableTitle' => 'Средний балл',
-            'tableKey' => 'averageScoreTable',
-        ],
-    ];
+    /**
+     * @var array Настройки конфигурации экспорта
+     */
+    private array $config;
 
     /**
-     * Экспортирует данные отчета в Excel-документ с N листами.
+     * @var Spreadsheet Экземпляр Spreadsheet
+     */
+    private Spreadsheet $spreadsheet;
+
+    /**
+     * @var array Данные отчета
+     */
+    private array $reportData;
+
+    /**
+     * @var string Значение по умолчанию для пустых ячеек
+     */
+    private string $defaultValue = '-';
+
+    /**
+     * Конструктор класса
      *
-     * @param array $reportData
+     * @param array $config Настройки для экспорта (опционально)
+     */
+    public function __construct(array $config = [])
+    {
+        $this->config = array_merge([
+            'layout' => [
+                'minChartWidthColumns' => 10,
+                'minChartEndRow' => 25,
+                'chartStartRow' => 2,
+            ],
+            'chartTypes' => [
+                'quality' => [
+                    'sheetTitle' => 'QualityResults',
+                    'chartTitle' => 'Уровень качества знаний',
+                    'dataRange' => '$B$2:$B$',
+                    'categoryRange' => '$A$2:$A$',
+                ],
+                'averageScore' => [
+                    'sheetTitle' => 'AverageScoreResults',
+                    'chartTitle' => 'Средний балл',
+                    'dataRange' => '$C$2:$C$',
+                    'categoryRange' => '$A$2:$A$',
+                ],
+            ],
+            'periodsChartTypes' => [
+                'quality' => [
+                    'sheetTitle' => 'QualityPerPeriods',
+                    'chartTitle' => 'Уровень качества знаний по годам',
+                    'isPercentage' => true,
+                    'tableTitle' => 'Уровень качества знаний',
+                    'tableKey' => 'qualityTable',
+                ],
+                'averageScore' => [
+                    'sheetTitle' => 'AverageScorePerPeriods',
+                    'chartTitle' => 'Средний балл по годам',
+                    'isPercentage' => false,
+                    'tableTitle' => 'Средний балл',
+                    'tableKey' => 'averageScoreTable',
+                ],
+            ],
+            'overallTablesHeaders' => [
+                'discipline' => 'Дисциплина',
+                'quality' => 'Уровень качества знаний',
+                'averageScore' => 'Средний балл',
+            ],
+        ], $config);
+
+        $this->initSpreadsheet();
+    }
+
+    /**
+     * Инициализация объекта Spreadsheet
+     */
+    private function initSpreadsheet(): void
+    {
+        $this->spreadsheet = new Spreadsheet();
+    }
+
+    /**
+     * Экспортирует данные отчета в Excel-документ с 4 листами.
+     *
+     * @param array $reportData Данные для отчета
      * @return string Путь к временному файлу
      * @throws Exception При ошибке создания Excel-файла
+     * @throws InvalidArgumentException При некорректной структуре данных
      */
-    public static function export(array $reportData): string
+    public function export(array $reportData): string
+    {
+        $this->reportData = $reportData;
+        $this->validateReportData();
+
+        foreach ($this->config['chartTypes'] as $type => $config) {
+            $this->createChartResultsSheet(
+                $config['sheetTitle'],
+                $config['chartTitle'],
+                $config['dataRange'],
+                $config['categoryRange']
+            );
+        }
+
+        foreach ($this->config['periodsChartTypes'] as $type => $config) {
+            $this->createPeriodsResultsSheet($config);
+        }
+
+        $this->spreadsheet->removeSheetByIndex(0);
+        $this->spreadsheet->setActiveSheetIndex(0);
+
+        return $this->saveDocument();
+    }
+
+    /**
+     * Валидирует структуру данных отчета
+     *
+     * @throws InvalidArgumentException При некорректной структуре данных
+     */
+    private function validateReportData(): void
+    {
+        if (
+            empty($this->reportData['data']['overallResults']) ||
+            empty($this->reportData['data']['finalResults']['qualityTable']) ||
+            empty($this->reportData['data']['finalResults']['averageScoreTable'])
+        ) {
+            throw new InvalidArgumentException('Invalid report data structure: missing required data fields');
+        }
+    }
+
+    /**
+     * Сохраняет документ во временный файл
+     *
+     * @return string Путь к временному файлу
+     * @throws Exception При ошибке сохранения файла
+     */
+    private function saveDocument(): string
     {
         try {
-            $spreadsheet = new Spreadsheet();
-
-            foreach (self::CHART_TYPES as $type => $config) {
-                self::createChartResultsSheet(
-                    $spreadsheet,
-                    $reportData,
-                    $config['sheetTitle'],
-                    $config['chartTitle'],
-                    $config['dataRange'],
-                    $config['categoryRange']
-                );
-            }
-
-            foreach (self::PERIODS_CHART_TYPES as $type => $config) {
-                self::createPeriodsResultsSheet(
-                    $spreadsheet,
-                    $reportData,
-                    $config
-                );
-            }
-
-            $spreadsheet->removeSheetByIndex(0);
-            $spreadsheet->setActiveSheetIndex(0);
-
             $tempFile = tempnam(sys_get_temp_dir(), 'PHPSpreadsheet');
-
-            $writer = new Xlsx($spreadsheet);
+            $writer = new Xlsx($this->spreadsheet);
             $writer->setIncludeCharts(true);
             $writer->save($tempFile);
-
             return $tempFile;
         } catch (Throwable $e) {
             throw new Exception('Failed to create Excel report: ' . $e->getMessage(), 0, $e);
@@ -105,31 +174,32 @@ class ExcelReportExporter
     }
 
     /**
-     * Создает лист с таблицей данных и диаграммой
-     * для общих метрик качества знаний и среднего балла (за все периоды)
+     * Создает лист с таблицей данных и диаграммой для общих метрик
      *
-     * @param Spreadsheet $spreadsheet
-     * @param array $reportData
      * @param string $sheetTitle Название листа
      * @param string $chartTitle Заголовок диаграммы
      * @param string $dataRange Диапазон данных для диаграммы
      * @param string $categoryRange Диапазон категорий для диаграммы
      */
-    private static function createChartResultsSheet(
-        Spreadsheet $spreadsheet,
-        array $reportData,
+    private function createChartResultsSheet(
         string $sheetTitle,
         string $chartTitle,
         string $dataRange,
         string $categoryRange
     ): void {
-        $sheet = $spreadsheet->createSheet();
+        $sheet = $this->spreadsheet->createSheet();
         $sheet->setTitle($sheetTitle);
 
-        $sheetData = self::prepareSheetData($reportData['data']['overallResults']);
-        self::fillSheetWithData($sheet, $sheetData);
+        $sheetData = $this->prepareSheetData($this->reportData['data']['overallResults']);
+        if (empty($sheetData)) {
+            $sheet->setSelectedCell('A1');
+            return;
+        }
+
+        $this->fillSheetWithData($sheet, $sheetData);
 
         if (count($sheetData) <= 1) {
+            $sheet->setSelectedCell('A1');
             return;
         }
 
@@ -137,9 +207,9 @@ class ExcelReportExporter
         $disciplineCount = $rowCount - 1;
         $tableColumnsCount = count($sheetData[0]);
 
-        $chartPosition = self::calculateChartPosition($disciplineCount, $rowCount, $tableColumnsCount);
+        $chartPosition = $this->calculateChartPosition($disciplineCount, $rowCount, $tableColumnsCount);
 
-        $chart = self::createBarChart(
+        $chart = $this->createBarChart(
             $sheetTitle,
             $chartTitle,
             $categoryRange,
@@ -152,46 +222,47 @@ class ExcelReportExporter
             ->setBottomRightPosition($chartPosition['bottomRight']);
 
         $sheet->addChart($chart);
+        $sheet->setSelectedCell('A1');
     }
 
     /**
      * Создает лист с таблицей данных и диаграммой по периодам
      *
-     * @param Spreadsheet $spreadsheet
-     * @param array $reportData
      * @param array $config Конфигурация листа и диаграммы
      */
-    private static function createPeriodsResultsSheet(
-        Spreadsheet $spreadsheet,
-        array $reportData,
-        array $config
-    ): void {
-        $sheet = $spreadsheet->createSheet();
+    private function createPeriodsResultsSheet(array $config): void
+    {
+        $sheet = $this->spreadsheet->createSheet();
         $sheet->setTitle($config['sheetTitle']);
 
-        $tableData = $reportData['data']['finalResults'][$config['tableKey']];
+        $tableData = $this->reportData['data']['finalResults'][$config['tableKey']];
+        if (empty($tableData)) {
+            $sheet->setSelectedCell('A1');
+            return;
+        }
 
-        [$sheetData, $periods, $disciplines] = self::preparePeriodsData(
+        [$sheetData, $periods, $disciplines] = $this->preparePeriodsData(
             $tableData,
             $config['tableTitle'],
             $config['isPercentage']
         );
 
         if (empty($sheetData) || count($sheetData) <= 2) {
+            $sheet->setSelectedCell('A1');
             return;
         }
 
         $sheet->fromArray($sheetData, null, 'A1');
 
         $totalColumns = count($sheetData[0]);
-        $lastColumn = self::getColumnLetter($totalColumns - 1);
+        $lastColumn = $this->getColumnLetter($totalColumns - 1);
 
-        self::formatPeriodsSheet($sheet, $lastColumn, $config['isPercentage']);
+        $this->formatPeriodsSheet($sheet, $lastColumn, $config['isPercentage']);
 
         $dataStartRow = 3;
         $disciplineCount = count($disciplines);
 
-        $chart = self::createClusteredBarChart(
+        $chart = $this->createClusteredBarChart(
             $config['sheetTitle'],
             $config['chartTitle'],
             $dataStartRow,
@@ -200,22 +271,23 @@ class ExcelReportExporter
             $periods
         );
 
-        $chartPosition = self::calculatePeriodsChartPosition($lastColumn, $disciplineCount, count($sheetData));
+        $chartPosition = $this->calculatePeriodsChartPosition($lastColumn, $disciplineCount, count($sheetData));
         $chart->setTopLeftPosition($chartPosition['topLeft']);
         $chart->setBottomRightPosition($chartPosition['bottomRight']);
 
         $sheet->addChart($chart);
+        $sheet->setSelectedCell('A1');
     }
 
     /**
      * Подготавливает данные для таблицы с периодами
      *
-     * @param array $tableData
-     * @param string $tableTitle
-     * @param bool $isPercentage
+     * @param array $tableData Данные таблицы
+     * @param string $tableTitle Заголовок таблицы
+     * @param bool $isPercentage Флаг форматирования как проценты
      * @return array [sheetData, periods, disciplines]
      */
-    private static function preparePeriodsData(array $tableData, string $tableTitle, bool $isPercentage): array
+    private function preparePeriodsData(array $tableData, string $tableTitle, bool $isPercentage): array
     {
         $periods = [];
 
@@ -232,7 +304,6 @@ class ExcelReportExporter
         }
 
         $headerRow1 = ['Дисциплина', $tableTitle];
-
         for ($i = 1; $i < count($periods); $i++) {
             $headerRow1[] = null;
         }
@@ -243,14 +314,14 @@ class ExcelReportExporter
         foreach ($tableData as $row) {
             $discipline = $row['discipline'];
             if (!isset($disciplines[$discipline])) {
-                $disciplines[$discipline] = array_fill_keys($periods, self::DEFAULT_VALUE);
+                $disciplines[$discipline] = array_fill_keys($periods, $this->defaultValue);
             }
             foreach ($row as $period => $value) {
                 if ($period !== 'discipline') {
-                    if ($isPercentage && $value !== null && $value !== self::DEFAULT_VALUE) {
+                    if ($isPercentage && $value !== null && $value !== $this->defaultValue) {
                         $disciplines[$discipline][$period] = $value / 100;
                     } else {
-                        $disciplines[$discipline][$period] = $value ?? self::DEFAULT_VALUE;
+                        $disciplines[$discipline][$period] = $value ?? $this->defaultValue;
                     }
                 }
             }
@@ -271,11 +342,11 @@ class ExcelReportExporter
     /**
      * Форматирует лист с данными по периодам
      *
-     * @param Worksheet $sheet
-     * @param string $lastColumn
-     * @param bool $isPercentage
+     * @param Worksheet $sheet Лист Excel
+     * @param string $lastColumn Последняя колонка
+     * @param bool $isPercentage Флаг форматирования как проценты
      */
-    private static function formatPeriodsSheet(Worksheet $sheet, string $lastColumn, bool $isPercentage): void
+    private function formatPeriodsSheet(Worksheet $sheet, string $lastColumn, bool $isPercentage): void
     {
         $sheet->mergeCells("A1:A2");
         $sheet->mergeCells("B1:{$lastColumn}1");
@@ -300,15 +371,15 @@ class ExcelReportExporter
     /**
      * Создает простую диаграмму с одной серией данных
      *
-     * @param string $sheetTitle
-     * @param string $chartTitle
-     * @param string $categoryRange
-     * @param string $dataRange
-     * @param int $rowCount
-     * @param int $disciplineCount
-     * @return Chart
+     * @param string $sheetTitle Название листа
+     * @param string $chartTitle Заголовок диаграммы
+     * @param string $categoryRange Диапазон категорий
+     * @param string $dataRange Диапазон данных
+     * @param int $rowCount Количество строк
+     * @param int $disciplineCount Количество дисциплин
+     * @return Chart Созданная диаграмма
      */
-    private static function createBarChart(
+    private function createBarChart(
         string $sheetTitle,
         string $chartTitle,
         string $categoryRange,
@@ -339,9 +410,9 @@ class ExcelReportExporter
             [$values]
         );
 
-        $xAxis = self::createXAxis();
-        $yAxis = self::createYAxis();
-        $layout = self::createChartLayout();
+        $xAxis = $this->createXAxis();
+        $yAxis = $this->createYAxis();
+        $layout = $this->createChartLayout();
 
         return new Chart(
             'Chart',
@@ -360,15 +431,15 @@ class ExcelReportExporter
     /**
      * Создает диаграмму с несколькими сериями данных (кластеризованную)
      *
-     * @param string $sheetTitle
-     * @param string $chartTitle
-     * @param int $dataStartRow
-     * @param string $lastColumn
-     * @param array $disciplines
-     * @param array $periods
-     * @return Chart
+     * @param string $sheetTitle Название листа
+     * @param string $chartTitle Заголовок диаграммы
+     * @param int $dataStartRow Начальная строка данных
+     * @param string $lastColumn Последняя колонка
+     * @param array $disciplines Список дисциплин
+     * @param array $periods Список периодов
+     * @return Chart Созданная диаграмма
      */
-    private static function createClusteredBarChart(
+    private function createClusteredBarChart(
         string $sheetTitle,
         string $chartTitle,
         int $dataStartRow,
@@ -389,7 +460,7 @@ class ExcelReportExporter
         $xAxisTickValues = [
             new DataSeriesValues(
                 DataSeriesValues::DATASERIES_TYPE_STRING,
-                "$sheetTitle!B2:" . $lastColumn . "2",
+                "$sheetTitle!B2:{$lastColumn}2",
                 null,
                 count($periods)
             )
@@ -400,7 +471,7 @@ class ExcelReportExporter
         foreach ($disciplines as $discipline => $data) {
             $dataSeriesValues[] = new DataSeriesValues(
                 DataSeriesValues::DATASERIES_TYPE_NUMBER,
-                "$sheetTitle!B" . $row . ":" . $lastColumn . $row,
+                "$sheetTitle!B{$row}:{$lastColumn}{$row}",
                 null,
                 count($periods)
             );
@@ -435,9 +506,9 @@ class ExcelReportExporter
     /**
      * Создает ось X для диаграммы
      *
-     * @return Axis
+     * @return Axis Созданная ось X
      */
-    private static function createXAxis(): Axis
+    private function createXAxis(): Axis
     {
         $xAxis = new Axis();
         $xAxisText = new AxisText();
@@ -450,9 +521,9 @@ class ExcelReportExporter
     /**
      * Создает ось Y для диаграммы
      *
-     * @return Axis
+     * @return Axis Созданная ось Y
      */
-    private static function createYAxis(): Axis
+    private function createYAxis(): Axis
     {
         $yAxis = new Axis();
         $gridLines = new GridLines();
@@ -465,9 +536,9 @@ class ExcelReportExporter
     /**
      * Создает макет диаграммы
      *
-     * @return Layout
+     * @return Layout Созданный макет
      */
-    private static function createChartLayout(): Layout
+    private function createChartLayout(): Layout
     {
         $layout = new Layout();
         $layout->setShowVal(true);
@@ -483,19 +554,19 @@ class ExcelReportExporter
      * @param int $tableColumnsCount Количество колонок в таблице
      * @return array Массив с позициями верхнего левого и нижнего правого углов диаграммы
      */
-    private static function calculateChartPosition(int $disciplineCount, int $rowCount, int $tableColumnsCount): array
+    private function calculateChartPosition(int $disciplineCount, int $rowCount, int $tableColumnsCount): array
     {
         $startColumnIndex = $tableColumnsCount + 1;
-        $startColumn = self::getColumnLetter($startColumnIndex);
+        $startColumn = $this->getColumnLetter($startColumnIndex);
 
-        $chartWidth = max(self::MIN_CHART_WIDTH_COLUMNS, $disciplineCount + 5);
+        $chartWidth = max($this->config['layout']['minChartWidthColumns'], $disciplineCount + 5);
         $endColumnIndex = $startColumnIndex + $chartWidth - 1;
-        $endColumn = self::getColumnLetter($endColumnIndex);
+        $endColumn = $this->getColumnLetter($endColumnIndex);
 
-        $endRow = max($rowCount, self::MIN_CHART_END_ROW);
+        $endRow = max($rowCount, $this->config['layout']['minChartEndRow']);
 
         return [
-            'topLeft' => $startColumn . self::CHART_START_ROW,
+            'topLeft' => $startColumn . $this->config['layout']['chartStartRow'],
             'bottomRight' => $endColumn . $endRow
         ];
     }
@@ -503,32 +574,31 @@ class ExcelReportExporter
     /**
      * Рассчитывает позицию для диаграммы с периодами
      *
-     * @param string $lastColumn
-     * @param int $disciplineCount
-     * @param int $rowCount
-     * @return array
+     * @param string $lastColumn Последняя колонка
+     * @param int $disciplineCount Количество дисциплин
+     * @param int $rowCount Количество строк
+     * @return array Массив с позициями верхнего левого и нижнего правого углов диаграммы
      */
-    private static function calculatePeriodsChartPosition(string $lastColumn, int $disciplineCount, int $rowCount): array
+    private function calculatePeriodsChartPosition(string $lastColumn, int $disciplineCount, int $rowCount): array
     {
         $chartStartColumn = chr(ord($lastColumn) + 2);
-        $chartWidth = max(self::MIN_CHART_WIDTH_COLUMNS, $disciplineCount + 5);
+        $chartWidth = max($this->config['layout']['minChartWidthColumns'], $disciplineCount + 5);
         $chartEndColumn = chr(ord($chartStartColumn) + $chartWidth - 1);
-        $chartEndRow = max($rowCount, self::MIN_CHART_END_ROW);
+        $chartEndRow = max($rowCount, $this->config['layout']['minChartEndRow']);
 
         return [
-            'topLeft' => $chartStartColumn . self::CHART_START_ROW,
+            'topLeft' => $chartStartColumn . $this->config['layout']['chartStartRow'],
             'bottomRight' => $chartEndColumn . $chartEndRow
         ];
     }
 
     /**
      * Преобразует числовой индекс колонки в буквенное обозначение
-     * Поддерживает колонки больше 'Z' (AA, AB и т.д.)
      *
      * @param int $columnIndex Индекс колонки (0-based)
-     * @return string
+     * @return string Буквенное обозначение колонки
      */
-    private static function getColumnLetter(int $columnIndex): string
+    private function getColumnLetter(int $columnIndex): string
     {
         $columnLetter = '';
         $columnIndex++;
@@ -545,19 +615,25 @@ class ExcelReportExporter
     /**
      * Подготавливает данные для таблицы
      *
-     * @param array $overallResults
-     * @return array
+     * @param array $overallResults Данные общих результатов
+     * @return array Подготовленные данные для таблицы
      */
-    private static function prepareSheetData(array $overallResults): array
+    private function prepareSheetData(array $overallResults): array
     {
-        $sheetData = [['Дисциплина', 'Качество знаний', 'Средний балл']];
+        $sheetData = [
+            [
+                $this->config['overallTablesHeaders']['discipline'],
+                $this->config['overallTablesHeaders']['quality'],
+                $this->config['overallTablesHeaders']['averageScore']
+            ]
+        ];
 
         foreach ($overallResults as $row) {
-            $quality = $row['avgQuality'] !== null ? $row['avgQuality'] / 100 : self::DEFAULT_VALUE;
+            $quality = $row['avgQuality'] !== null ? $row['avgQuality'] / 100 : $this->defaultValue;
             $sheetData[] = [
                 $row['discipline'],
                 $quality,
-                $row['avgAverageScore'] ?? self::DEFAULT_VALUE,
+                $row['avgAverageScore'] ?? $this->defaultValue,
             ];
         }
 
@@ -567,30 +643,52 @@ class ExcelReportExporter
     /**
      * Заполняет лист данными и применяет форматирование
      *
-     * @param Worksheet $sheet
-     * @param array $sheetData
+     * @param Worksheet $sheet Лист Excel
+     * @param array $sheetData Данные для заполнения
      */
-    private static function fillSheetWithData(Worksheet $sheet, array $sheetData): void
+    private function fillSheetWithData(Worksheet $sheet, array $sheetData): void
     {
         $sheet->fromArray($sheetData, null, 'A1');
 
         $columnCount = count($sheetData[0]);
 
         for ($i = 0; $i < $columnCount; $i++) {
-            $columnLetter = self::getColumnLetter($i);
+            $columnLetter = $this->getColumnLetter($i);
             $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
         }
 
-        $lastColumnLetter = self::getColumnLetter($columnCount - 1);
+        $lastColumnLetter = $this->getColumnLetter($columnCount - 1);
         $sheet->getStyle("A1:{$lastColumnLetter}1")->getFont()->setBold(true)->setSize(11);
 
         for ($i = 2; $i <= count($sheetData); $i++) {
-            if ($sheetData[$i-1][1] !== self::DEFAULT_VALUE) {
+            if ($sheetData[$i - 1][1] !== $this->defaultValue) {
                 $percentageFormat = new Percentage();
-                $sheet->getCell('B' . $i)
+                $sheet->getCell("B{$i}")
                     ->getStyle()->getNumberFormat()
                     ->setFormatCode($percentageFormat);
             }
         }
+    }
+
+    /**
+     * Фабричный метод для создания экспортера с настройками по умолчанию
+     *
+     * @return self Новый экземпляр экспортера
+     */
+    public static function create(): self
+    {
+        return new self();
+    }
+
+    /**
+     * Фабричный метод для экспорта с настройками по умолчанию
+     *
+     * @param array $reportData Данные отчета
+     * @return string Путь к временному файлу
+     * @throws Exception При ошибке создания файла
+     */
+    public static function exportDefault(array $reportData): string
+    {
+        return new self()->export($reportData);
     }
 }

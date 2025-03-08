@@ -153,15 +153,23 @@ class ReportController extends Controller
     }
 
     /**
-     * Экспорт отчета в Word-документ
+     * Экспорт отчета в Word и Excel
      *
      * @param ExportReportRequest $request
-     * @return BinaryFileResponse
-     * @throws \PhpOffice\PhpWord\Exception\Exception
+     * @return BinaryFileResponse|JsonResponse
      */
-    public function export(ExportReportRequest $request): BinaryFileResponse
+    public function export(ExportReportRequest $request): BinaryFileResponse|JsonResponse
     {
-        return ReportService::export($request->id);
+        try {
+            return ReportService::export($request->id);
+        } catch (Exception $e) {
+            return response()->json([
+                'data' => [
+                    'success' => false,
+                    'message' => 'При попытке экспорта произошла ошибка',
+                ],
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**

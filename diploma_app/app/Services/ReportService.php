@@ -6,8 +6,8 @@ use App\Http\Requests\Report\EditReportRequest;
 use App\Http\Requests\Report\StoreReportRequest;
 use App\Models\Report;
 use App\Repositories\ReportRepository;
+use Exception;
 use Illuminate\Support\Carbon;
-use PhpOffice\PhpWord\Exception\Exception;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use App\Exports\ReportExporter;
 
@@ -55,7 +55,7 @@ class ReportService
      *
      * @param int $reportId
      * @return BinaryFileResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public static function export(int $reportId): BinaryFileResponse
     {
@@ -63,13 +63,16 @@ class ReportService
 
         if (isset($report['data']) && is_string($report['data'])) {
             $decodedData = json_decode($report['data'], true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $report['data'] = $decodedData;
-            } else {
-                $report['data'] = [];
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception('Invalid JSON data in report');
             }
+            $report['data'] = $decodedData;
         }
 
-        return ReportExporter::export($report, $report['title']);
+        try {
+            return ReportExporter::export($report, $report['title']);
+        } catch (Exception $e) {
+            throw new Exception('Export failed: ' . $e->getMessage(), 0, $e);
+        }
     }
 }
