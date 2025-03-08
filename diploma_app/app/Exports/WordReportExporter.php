@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\Exception\Exception as PhpWordException;
@@ -252,8 +251,6 @@ class WordReportExporter
      */
     private function validateReportData(): void
     {
-        Log::info('WordReportExporter::validateReportData - Validating data:', $this->reportData);
-
         if (
             empty($this->reportData['data']['finalResults']['averageScoreTable']) ||
             empty($this->reportData['data']['finalResults']['qualityTable']) ||

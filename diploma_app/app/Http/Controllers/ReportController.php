@@ -15,6 +15,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReportController extends Controller
@@ -163,6 +164,7 @@ class ReportController extends Controller
         try {
             return ReportService::export($request->id);
         } catch (Exception $e) {
+            Log::critical($e->getMessage());
             return response()->json([
                 'data' => [
                     'success' => false,

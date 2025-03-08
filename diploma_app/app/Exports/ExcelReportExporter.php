@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use PhpOffice\PhpSpreadsheet\Chart\Axis;
 use PhpOffice\PhpSpreadsheet\Chart\AxisText;
@@ -261,6 +262,7 @@ class ExcelReportExporter
 
         $dataStartRow = 3;
         $disciplineCount = count($disciplines);
+        $periodCount = count($periods); // Добавляем количество периодов
 
         $chart = $this->createClusteredBarChart(
             $config['sheetTitle'],
@@ -271,7 +273,7 @@ class ExcelReportExporter
             $periods
         );
 
-        $chartPosition = $this->calculatePeriodsChartPosition($lastColumn, $disciplineCount, count($sheetData));
+        $chartPosition = $this->calculatePeriodsChartPosition($lastColumn, $disciplineCount, count($sheetData), $periodCount);
         $chart->setTopLeftPosition($chartPosition['topLeft']);
         $chart->setBottomRightPosition($chartPosition['bottomRight']);
 
@@ -574,16 +576,20 @@ class ExcelReportExporter
     /**
      * Рассчитывает позицию для диаграммы с периодами
      *
-     * @param string $lastColumn Последняя колонка
+     * @param string $lastColumn Последняя колонка таблицы
      * @param int $disciplineCount Количество дисциплин
      * @param int $rowCount Количество строк
+     * @param int $periodCount Количество периодов
      * @return array Массив с позициями верхнего левого и нижнего правого углов диаграммы
      */
-    private function calculatePeriodsChartPosition(string $lastColumn, int $disciplineCount, int $rowCount): array
+    private function calculatePeriodsChartPosition(string $lastColumn, int $disciplineCount, int $rowCount, int $periodCount): array
     {
-        $chartStartColumn = chr(ord($lastColumn) + 2);
-        $chartWidth = max($this->config['layout']['minChartWidthColumns'], $disciplineCount + 5);
-        $chartEndColumn = chr(ord($chartStartColumn) + $chartWidth - 1);
+        $startColumnIndex = ord($lastColumn) - 65 + 2;
+        $chartStartColumn = $this->getColumnLetter($startColumnIndex);
+        $tableWidth = $periodCount + 1;
+        $chartWidth = max($this->config['layout']['minChartWidthColumns'], $tableWidth + $disciplineCount);
+        $endColumnIndex = $startColumnIndex + $chartWidth - 1;
+        $chartEndColumn = $this->getColumnLetter($endColumnIndex);
         $chartEndRow = max($rowCount, $this->config['layout']['minChartEndRow']);
 
         return [
