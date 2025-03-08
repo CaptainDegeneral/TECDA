@@ -31,71 +31,45 @@ export const sanitizeData = (data) => {
 };
 
 /**
- * Форматирует число Decimal в строку, убирая незначащие нули.
- * @param {Decimal} decimal - Число Decimal для форматирования.
- * @returns {string} Отформатированная строка.
+ * Преобразует объект Decimal в число, сохраняя только значимые цифры.
+ * @param {Decimal} decimal - Число Decimal для преобразования.
+ * @returns {number} Число без незначащих нулей.
  */
-const formatNumberString = (decimal) => {
-    const str = decimal.toFixed(2);
-    if (str.endsWith('.00')) {
-        return str.slice(0, -3);
-    }
-    if (str.endsWith('0')) {
-        return str.slice(0, -1);
-    }
-    return str;
+const decimalToNumber = (decimal) => {
+    return decimal.toNumber();
 };
 
 /**
- * Финализирует данные вкладок, добавляя вычисленные значения в виде строк без незначащих нулей.
+ * Обогащает данные строки вычисленными значениями.
+ * @param {Object} row - Исходные данные строки.
+ * @returns {Object} Обогащённая строка с вычисленными значениями.
+ */
+const enhanceRow = (row) => {
+    const totalGrades = calculateTotalGrades(row);
+    const performance = calculatePerformance(row);
+    const quality = calculateQuality(row);
+    const averageScore = calculateAverageScore(row);
+
+    return {
+        ...row,
+        totalGrades: totalGrades !== null ? totalGrades.toString() : null,
+        performance: performance !== null ? decimalToNumber(performance) : null,
+        quality: quality !== null ? decimalToNumber(quality) : null,
+        averageScore:
+            averageScore !== null ? decimalToNumber(averageScore) : null,
+    };
+};
+
+/**
+ * Финализирует данные вкладок, добавляя вычисленные значения.
  * @param {Array} tabsData - Массив данных вкладок.
  * @returns {Array} Обогащенные данные вкладок с вычисленными значениями.
  */
 export const getEnhancedTabsData = (tabsData) => {
     return tabsData.map((tab) => ({
         ...tab,
-        autumnWinter: tab.autumnWinter.map((row) => {
-            const totalGrades = calculateTotalGrades(row);
-            const performance = calculatePerformance(row);
-            const quality = calculateQuality(row);
-            const averageScore = calculateAverageScore(row);
-
-            return {
-                ...row,
-                totalGrades:
-                    totalGrades !== null ? totalGrades.toString() : null,
-                performance:
-                    performance !== null
-                        ? formatNumberString(performance)
-                        : null,
-                quality: quality !== null ? formatNumberString(quality) : null,
-                averageScore:
-                    averageScore !== null
-                        ? formatNumberString(averageScore)
-                        : null,
-            };
-        }),
-        springSummer: tab.springSummer.map((row) => {
-            const totalGrades = calculateTotalGrades(row);
-            const performance = calculatePerformance(row);
-            const quality = calculateQuality(row);
-            const averageScore = calculateAverageScore(row);
-
-            return {
-                ...row,
-                totalGrades:
-                    totalGrades !== null ? totalGrades.toString() : null,
-                performance:
-                    performance !== null
-                        ? formatNumberString(performance)
-                        : null,
-                quality: quality !== null ? formatNumberString(quality) : null,
-                averageScore:
-                    averageScore !== null
-                        ? formatNumberString(averageScore)
-                        : null,
-            };
-        }),
+        autumnWinter: tab.autumnWinter.map(enhanceRow),
+        springSummer: tab.springSummer.map(enhanceRow),
     }));
 };
 
@@ -128,7 +102,7 @@ export const generateTabs = (yearsOfWork, startYear) => {
 };
 
 /**
- * Преобразует значения Decimal в строки без незначащих нулей для сериализации.
+ * Преобразует значения Decimal в числа для сериализации.
  * @param {any} data - Данные для обработки.
  * @returns {any} Данные с преобразованными значениями.
  */
@@ -136,7 +110,7 @@ const formatDecimalValues = (data) => {
     if (data === null || data === undefined) return data;
 
     if (data instanceof Decimal) {
-        return formatNumberString(data);
+        return decimalToNumber(data);
     }
 
     if (Array.isArray(data)) {
@@ -155,13 +129,13 @@ const formatDecimalValues = (data) => {
 };
 
 /**
- * Собирает все данные для отчета, преобразуя Decimal в строки без незначащих нулей.
+ * Собирает все данные для отчета, преобразуя Decimal в числа.
  * @param {Object} config - Конфигурация (category, yearsOfWork, startYear).
  * @param {Array} tabsData - Данные вкладок.
  * @param {Array} intermediateResults - Промежуточные результаты.
  * @param {Object} finalResults - Конечные результаты.
  * @param {Array} overallResults - Общие результаты.
- * @returns {string} JSON-строка с очищенными данными и строковыми значениями.
+ * @returns {string} JSON-строка с очищенными данными и числовыми значениями.
  */
 export const collectReportData = (
     config,

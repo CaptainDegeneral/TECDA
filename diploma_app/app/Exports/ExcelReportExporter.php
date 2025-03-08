@@ -47,30 +47,8 @@ class ExcelReportExporter
     }
 
     /**
-     * Рекурсивная функция для обработки вложенных массивов
-     *
-     * @param $reportData
-     * @return array|float|mixed
-     */
-    private static function processReportData($reportData): mixed
-    {
-        $processArray = function ($data) use (&$processArray) {
-            if (!is_array($data)) {
-                if (is_string($data) && preg_match('/^-?\d*\.?\d+$/', $data)) {
-                    return floatval($data);
-                }
-                return $data;
-            }
-            foreach ($data as $key => $value) {
-                $data[$key] = $processArray($value);
-            }
-            return $data;
-        };
-        return $processArray($reportData);
-    }
-
-    /**
      * Создает лист с таблицей данных и диаграммой
+     * для общих метрик качества знаний и среднего балла (за все периоды)
      *
      * @param Spreadsheet $spreadsheet
      * @param array $reportData
@@ -83,7 +61,6 @@ class ExcelReportExporter
      */
     private static function createChartResultsSheet(Spreadsheet $spreadsheet, array $reportData, string $sheetTitle, string $chartTitle, string $dataRange, string $categoryRange, int $chartPositionX, int $chartPositionY): void
     {
-        $reportData = self::processReportData($reportData);
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle($sheetTitle);
 
