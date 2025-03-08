@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Abstracts\ReportDataValidator;
 use InvalidArgumentException;
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\Exception\Exception as PhpWordException;
@@ -12,10 +13,10 @@ use PhpOffice\PhpWord\SimpleType\Jc;
 /**
  * Класс для экспорта отчетов в формат Word.
  */
-class WordReportExporter
+class WordReportExporter extends ReportDataValidator
 {
     /**
-     * @var array Настройки стилей документа
+     * @var array Настройки конфигурации экспорта
      */
     private array $config;
 
@@ -23,11 +24,6 @@ class WordReportExporter
      * @var PhpWord Экземпляр PhpWord
      */
     private PhpWord $phpWord;
-
-    /**
-     * @var array Данные отчета
-     */
-    private array $reportData;
 
     /**
      * @var string Значение по умолчанию для пустых ячеек
@@ -241,22 +237,6 @@ class WordReportExporter
                 $dataRow->addCell($valueWidth, $this->config['styles']['cell'])
                     ->addText($value, $this->config['styles']['cell']);
             }
-        }
-    }
-
-    /**
-     * Валидирует структуру данных отчета
-     *
-     * @throws InvalidArgumentException
-     */
-    private function validateReportData(): void
-    {
-        if (
-            empty($this->reportData['data']['finalResults']['averageScoreTable']) ||
-            empty($this->reportData['data']['finalResults']['qualityTable']) ||
-            !isset($this->reportData['user'])
-        ) {
-            throw new InvalidArgumentException('Invalid report data structure');
         }
     }
 

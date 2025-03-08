@@ -2,8 +2,8 @@
 
 namespace App\Exports;
 
+use App\Abstracts\ReportDataValidator;
 use Exception;
-use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use PhpOffice\PhpSpreadsheet\Chart\Axis;
 use PhpOffice\PhpSpreadsheet\Chart\AxisText;
@@ -24,7 +24,7 @@ use Throwable;
 /**
  * Класс для экспорта отчетов в формат Excel.
  */
-class ExcelReportExporter
+class ExcelReportExporter extends ReportDataValidator
 {
     /**
      * @var array Настройки конфигурации экспорта
@@ -35,11 +35,6 @@ class ExcelReportExporter
      * @var Spreadsheet Экземпляр Spreadsheet
      */
     private Spreadsheet $spreadsheet;
-
-    /**
-     * @var array Данные отчета
-     */
-    private array $reportData;
 
     /**
      * @var string Значение по умолчанию для пустых ячеек
@@ -139,21 +134,6 @@ class ExcelReportExporter
         return $this->saveDocument();
     }
 
-    /**
-     * Валидирует структуру данных отчета
-     *
-     * @throws InvalidArgumentException При некорректной структуре данных
-     */
-    private function validateReportData(): void
-    {
-        if (
-            empty($this->reportData['data']['overallResults']) ||
-            empty($this->reportData['data']['finalResults']['qualityTable']) ||
-            empty($this->reportData['data']['finalResults']['averageScoreTable'])
-        ) {
-            throw new InvalidArgumentException('Invalid report data structure: missing required data fields');
-        }
-    }
 
     /**
      * Сохраняет документ во временный файл
@@ -262,7 +242,7 @@ class ExcelReportExporter
 
         $dataStartRow = 3;
         $disciplineCount = count($disciplines);
-        $periodCount = count($periods); // Добавляем количество периодов
+        $periodCount = count($periods);
 
         $chart = $this->createClusteredBarChart(
             $config['sheetTitle'],
