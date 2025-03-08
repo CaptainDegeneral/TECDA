@@ -163,6 +163,7 @@ class ReportController extends Controller
     {
         try {
             return ReportService::export($request->id);
+            //return ReportService::exportTest();
         } catch (Exception $e) {
             Log::critical($e->getMessage());
             return response()->json([
