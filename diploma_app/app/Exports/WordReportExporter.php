@@ -9,6 +9,7 @@ use PhpOffice\PhpWord\Exception\Exception as PhpWordException;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\SimpleType\Jc;
+use PhpOffice\PhpWord\Style\Tab;
 
 /**
  * Класс для экспорта отчетов в формат Word.
@@ -37,26 +38,81 @@ class WordReportExporter extends ReportDataValidator
      */
     public function __construct(array $config = [])
     {
-        // Объединяем переданные настройки с настройками по умолчанию
         $this->config = array_merge([
             'styles' => [
-                'title' => ['bold' => true, 'size' => 14, 'name' => 'Times New Roman'],
-                'subtitle' => ['size' => 12, 'name' => 'Times New Roman'],
+                'title' => [
+                    'bold' => true,
+                    'size' => 14,
+                    'name' => 'Times New Roman'
+                ],
+                'subtitle' => [
+                    'size' => 12,
+                    'name' => 'Times New Roman'
+                ],
                 'table' => [
-                    'borderSize'   => 6,
-                    'borderColor'  => '000000',
-                    'cellMargin'   => 80,
-                    'width'        => 9800,
-                    'unit'         => 'dxa',
+                    'borderSize' => 6,
+                    'borderColor' => '000000',
+                    'cellMargin' => 80,
+                    'width' => 9800,
+                    'unit' => 'dxa',
                 ],
                 'header' => [
-                    'bold'   => true,
+                    'bold' => true,
                     'valign' => 'center',
-                    'size'   => 11,
+                    'align' => 'center',
+                    'size' => 11,
                 ],
                 'cell' => [
                     'valign' => 'center',
-                    'size'   => 11,
+                    'size' => 11,
+                ],
+                'description' => [
+                    'font' => [
+                        'size' => 11,
+                        'name' => 'Times New Roman'
+                    ],
+                    'paragraph' => [
+                        'alignment' => Jc::BOTH,
+                        'indentation' => [
+                            'firstLine' => 425.25
+                        ],
+                        'tabs' => [
+                            [
+                                'type' => 'left',
+                                'position' => 850.
+                            ]
+                        ],
+                    ],
+                ],
+                'averageScoreText' => [
+                    'font' => [
+                        'size' => 11,
+                        'name' => 'Times New Roman',
+                        'lineHeight' => 1.0,
+                        'spaceBefore' => 0,
+                        'spaceAfter' => 0
+                    ],
+                    'paragraph' => [
+                        'indentation' => [
+                            'firstLine' => 425.25
+                        ],
+                        'alignment' => Jc::BOTH,
+                    ],
+                ],
+                'qualityText' => [
+                    'font' => [
+                        'size' => 11,
+                        'name' => 'Times New Roman',
+                        'lineHeight' => 1.0,
+                        'spaceBefore' => 0,
+                        'spaceAfter' => 0
+                    ],
+                    'paragraph' => [
+                        'indentation' => [
+                            'firstLine' => 425.25
+                        ],
+                        'alignment' => Jc::BOTH,
+                    ],
                 ],
             ],
             'tableConfig' => [
@@ -67,13 +123,34 @@ class WordReportExporter extends ReportDataValidator
                 'teacherPrefix' => 'Преподаватель ',
                 'description' => 'Результаты освоения обучающимися образовательных программ по итогам мониторингов, проводимых организацией (качество знаний с учетом статуса образовательной организации)',
                 'averageScore' => 'По результатам промежуточной аттестации за межаттестационный период средний балл обучающихся составил:',
-                'quality' => 'По результатам промежуточной аттестации за межаттестационный период качество знаний обучающихся составило:'
+                'quality' => 'По результатам промежуточной аттестации за межаттестационный период качество знаний обучающихся составило:',
             ],
             'margins' => [
                 'left' => 1200,
                 'right' => 900,
                 'top' => 900,
-                'bottom' => 900
+                'bottom' => 900,
+            ],
+            'numberingStyle' => [
+                'type' => 'multilevel',
+                'levels' => [
+                    [
+                        'format' => 'decimal',
+                        'text' => '%1.',
+                        'left' => 360,
+                        'hanging' => 360
+                    ],
+                    [
+                        'format' => 'decimal',
+                        'text' => '%1.%2.',
+                        'left' => 480,
+                        'hanging' => 480
+                    ],
+                ],
+            ],
+            'emptyLine' => [
+                'defaultHeight' => 1.15,
+                'tableSpacer' => 1.0,
             ],
         ], $config);
 
@@ -89,17 +166,7 @@ class WordReportExporter extends ReportDataValidator
         $this->phpWord->setDefaultParagraphStyle(['spaceBefore' => 0, 'spaceAfter' => 0]);
         $this->phpWord->setDefaultFontName('Times New Roman');
         $this->phpWord->setDefaultFontSize(11);
-
-        $this->phpWord->addNumberingStyle(
-            'multilevel',
-            [
-                'type'   => 'multilevel',
-                'levels' => [
-                    ['format' => 'decimal', 'text' => '%1.', 'left' => 360, 'hanging' => 360],
-                    ['format' => 'decimal', 'text' => '%1.%2.', 'left' => 480, 'hanging' => 480],
-                ],
-            ]
-        );
+        $this->phpWord->addNumberingStyle('multilevel', $this->config['numberingStyle']);
     }
 
     /**
@@ -114,9 +181,7 @@ class WordReportExporter extends ReportDataValidator
     {
         $this->reportData = $reportData;
         $this->validateReportData();
-
         $section = $this->phpWord->addSection($this->config['margins']);
-
         $this->generateReport($section);
 
         return $this->saveDocument();
@@ -132,25 +197,28 @@ class WordReportExporter extends ReportDataValidator
         $finalResults = $this->reportData['data']['finalResults'];
 
         $this->addTitle($section);
+
         $this->addTeacherName($section);
-        $this->addEmptyLine($section, 1.15);
+
+        $this->addEmptyLine($section, $this->config['emptyLine']['defaultHeight']);
+
         $this->addDescription($section);
-        $this->addEmptyLine($section, 1.15);
+
+        $this->addEmptyLine($section, $this->config['emptyLine']['defaultHeight']);
+
         $this->addAverageScoreText($section);
-        $this->addEmptyLine($section, 1.0);
-        $this->addGenericTable(
-            $section,
-            $finalResults['averageScoreTable'],
-            'Средний бал'
-        );
-        $this->addEmptyLine($section, 1.15);
+
+        $this->addEmptyLine($section, $this->config['emptyLine']['tableSpacer']);
+
+        $this->addGenericTable($section, $finalResults['averageScoreTable'], 'Средний бал');
+
+        $this->addEmptyLine($section, $this->config['emptyLine']['defaultHeight']);
+
         $this->addQualityText($section);
-        $this->addEmptyLine($section, 1.0);
-        $this->addGenericTable(
-            $section,
-            $finalResults['qualityTable'],
-            'Уровень качества знаний, %'
-        );
+
+        $this->addEmptyLine($section, $this->config['emptyLine']['tableSpacer']);
+
+        $this->addGenericTable($section, $finalResults['qualityTable'], 'Уровень качества знаний, %');
     }
 
     /**
@@ -162,6 +230,7 @@ class WordReportExporter extends ReportDataValidator
     private function saveDocument(): string
     {
         $tempFile = tempnam(sys_get_temp_dir(), 'PHPWord');
+
         $writer = IOFactory::createWriter($this->phpWord);
         $writer->save($tempFile);
 
@@ -197,13 +266,11 @@ class WordReportExporter extends ReportDataValidator
         }
 
         $table = $section->addTable($this->config['styles']['table']);
-
         $allKeys = array_keys($data[0]);
         $disciplineKey = 'discipline';
         $yearKeys = array_filter($allKeys, fn($key) => $key !== $disciplineKey);
         $yearCount = count($yearKeys);
 
-        // Добавляем заголовок таблицы
         $headerRow = $table->addRow();
         $headerRow->addCell(
             $this->config['tableConfig']['disciplineWidth'],
@@ -216,7 +283,6 @@ class WordReportExporter extends ReportDataValidator
         );
         $headerCell->addText($tableHeaderText, $this->config['styles']['header']);
 
-        // Подзаголовки с годами
         $subHeaderRow = $table->addRow();
         $subHeaderRow->addCell(null, ['vMerge' => 'continue']);
         $valueWidth = ($this->config['styles']['table']['width'] - $this->config['tableConfig']['disciplineWidth']) / $yearCount;
@@ -226,7 +292,6 @@ class WordReportExporter extends ReportDataValidator
                 ->addText($year, $this->config['styles']['header']);
         }
 
-        // Строки с данными
         foreach ($data as $row) {
             $dataRow = $table->addRow();
             $dataRow->addCell($this->config['tableConfig']['disciplineWidth'], $this->config['styles']['cell'])
@@ -276,12 +341,16 @@ class WordReportExporter extends ReportDataValidator
      */
     private function addDescription(Section $section): void
     {
-        $descriptionStyle = ['size' => 11, 'name' => 'Times New Roman'];
-        $paragraphStyle = ['alignment' => Jc::BOTH];
+        $descConfig = $this->config['styles']['description'];
+        $fontStyle = $descConfig['font'];
+        $paragraphStyle = $descConfig['paragraph'];
+        $tabs = array_map(fn($tab) => new Tab($tab['type'], $tab['position']), $paragraphStyle['tabs']);
+        $paragraphStyle['tabs'] = $tabs;
+
         $section->addListItem(
             $this->config['text']['description'],
             1,
-            $descriptionStyle,
+            $fontStyle,
             'multilevel',
             $paragraphStyle
         );
@@ -294,9 +363,8 @@ class WordReportExporter extends ReportDataValidator
      */
     private function addAverageScoreText(Section $section): void
     {
-        $textStyle = ['size' => 11, 'name' => 'Times New Roman', 'lineHeight' => 1.0, 'spaceBefore' => 0, 'spaceAfter' => 0];
-        $paragraphStyle = ['indentation' => ['firstLine' => 480], 'alignment' => Jc::BOTH];
-        $section->addText($this->config['text']['averageScore'], $textStyle, $paragraphStyle);
+        $avgConfig = $this->config['styles']['averageScoreText'];
+        $section->addText($this->config['text']['averageScore'], $avgConfig['font'], $avgConfig['paragraph']);
     }
 
     /**
@@ -306,9 +374,8 @@ class WordReportExporter extends ReportDataValidator
      */
     private function addQualityText(Section $section): void
     {
-        $textStyle = ['size' => 11, 'name' => 'Times New Roman', 'lineHeight' => 1.0, 'spaceBefore' => 0, 'spaceAfter' => 0];
-        $paragraphStyle = ['indentation' => ['firstLine' => 480], 'alignment' => Jc::BOTH];
-        $section->addText($this->config['text']['quality'], $textStyle, $paragraphStyle);
+        $qualityConfig = $this->config['styles']['qualityText'];
+        $section->addText($this->config['text']['quality'], $qualityConfig['font'], $qualityConfig['paragraph']);
     }
 
     /**

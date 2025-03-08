@@ -85,7 +85,7 @@ class ReportService
      */
     public static function exportTest(): BinaryFileResponse
     {
-        $testData = ReportDataFactory::getTestReportData(10, 3);;
+        $testData = ReportDataFactory::getTestReportData(10, 3);
         $testTitle = ReportDataFactory::getTestReportTitle();
 
         try {

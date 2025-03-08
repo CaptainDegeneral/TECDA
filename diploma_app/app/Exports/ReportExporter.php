@@ -51,7 +51,20 @@ class ReportExporter
             $zip->addFile($excelFile, $fileName . '.xlsx');
             $zip->close();
 
-            return response()->download($zipFilename, 'Report_' . time() . '.zip')->deleteFileAfterSend();
+            $lastName = $reportData['user']['last_name'] ?? null;
+
+            if ($lastName) {
+                $cleanLastName = self::cleanReportTitle($lastName);
+                if (!empty($cleanLastName)) {
+                    $archiveName = 'Отчет_' . $cleanLastName . '_' . time() . '.zip';
+                } else {
+                    $archiveName = 'Отчет_' . time() . '.zip';
+                }
+            } else {
+                $archiveName = 'Отчет_' . time() . '.zip';
+            }
+
+            return response()->download($zipFilename, $archiveName)->deleteFileAfterSend();
         } catch (Exception $e) {
             throw new Exception('Error during report export: ' . $e->getMessage(), 0, $e);
         }
