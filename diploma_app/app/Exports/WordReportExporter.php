@@ -53,7 +53,7 @@ class WordReportExporter extends ReportDataValidator
                     'borderSize' => 6,
                     'borderColor' => '000000',
                     'cellMargin' => 80,
-                    'width' => 9800,
+                    'width' => 9355.5,
                     'unit' => 'dxa',
                 ],
                 'header' => [
@@ -126,10 +126,10 @@ class WordReportExporter extends ReportDataValidator
                 'quality' => 'По результатам промежуточной аттестации за межаттестационный период качество знаний обучающихся составило:',
             ],
             'margins' => [
-                'left' => 1200,
-                'right' => 900,
-                'top' => 900,
-                'bottom' => 900,
+                'marginTop'    => 1134,
+                'marginBottom' => 1134,
+                'marginLeft'   => 1701,
+                'marginRight'  => 850.5,
             ],
             'numberingStyle' => [
                 'type' => 'multilevel',

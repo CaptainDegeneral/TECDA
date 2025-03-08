@@ -16,6 +16,7 @@ use PhpOffice\PhpSpreadsheet\Chart\Legend;
 use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
 use PhpOffice\PhpSpreadsheet\Chart\Title;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat\Wizard\Percentage;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -53,6 +54,8 @@ class ExcelReportExporter extends ReportDataValidator
                 'minChartWidthColumns' => 10,
                 'minChartEndRow' => 25,
                 'chartStartRow' => 2,
+                'chartWidthPadding' => 5,
+                'chartColumnOffset' => 2,
             ],
             'chartTypes' => [
                 'quality' => [
@@ -89,6 +92,40 @@ class ExcelReportExporter extends ReportDataValidator
                 'quality' => 'Уровень качества знаний',
                 'averageScore' => 'Средний балл',
             ],
+            'styles' => [
+                'header' => [
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                ],
+            ],
+            'chartSettings' => [
+                'barChartName' => 'Chart',
+                'clusteredChartNamePrefix' => 'chart_',
+                'xAxis' => [
+                    'textRotation' => -45,
+                ],
+                'yAxis' => [
+                    'gridLineColor' => 'd9d9d9',
+                ],
+                'layout' => [
+                    'showValues' => true,
+                ],
+                'legend' => [
+                    'position' => Legend::POSITION_BOTTOM,
+                    'showBorder' => false,
+                ],
+                'dataStartRow' => 3,
+            ],
+            'dataProcessing' => [
+                'qualityDivider' => 100,
+                'disciplineColumnTitle' => 'Дисциплина',
+            ],
         ], $config);
 
         $this->initSpreadsheet();
@@ -115,7 +152,7 @@ class ExcelReportExporter extends ReportDataValidator
         $this->reportData = $reportData;
         $this->validateReportData();
 
-        foreach ($this->config['chartTypes'] as $type => $config) {
+        foreach ($this->config['chartTypes'] as $config) {
             $this->createChartResultsSheet(
                 $config['sheetTitle'],
                 $config['chartTitle'],
@@ -124,7 +161,7 @@ class ExcelReportExporter extends ReportDataValidator
             );
         }
 
-        foreach ($this->config['periodsChartTypes'] as $type => $config) {
+        foreach ($this->config['periodsChartTypes'] as $config) {
             $this->createPeriodsResultsSheet($config);
         }
 
@@ -133,7 +170,6 @@ class ExcelReportExporter extends ReportDataValidator
 
         return $this->saveDocument();
     }
-
 
     /**
      * Сохраняет документ во временный файл
@@ -233,14 +269,14 @@ class ExcelReportExporter extends ReportDataValidator
             return;
         }
 
-        $sheet->fromArray($sheetData, null, 'A1');
+        $sheet->fromArray($sheetData);
 
         $totalColumns = count($sheetData[0]);
         $lastColumn = $this->getColumnLetter($totalColumns - 1);
 
         $this->formatPeriodsSheet($sheet, $lastColumn, $config['isPercentage']);
 
-        $dataStartRow = 3;
+        $dataStartRow = $this->config['chartSettings']['dataStartRow'];
         $disciplineCount = count($disciplines);
         $periodCount = count($periods);
 
@@ -285,7 +321,7 @@ class ExcelReportExporter extends ReportDataValidator
             return [[], [], []];
         }
 
-        $headerRow1 = ['Дисциплина', $tableTitle];
+        $headerRow1 = [$this->config['dataProcessing']['disciplineColumnTitle'], $tableTitle];
         for ($i = 1; $i < count($periods); $i++) {
             $headerRow1[] = null;
         }
@@ -301,7 +337,7 @@ class ExcelReportExporter extends ReportDataValidator
             foreach ($row as $period => $value) {
                 if ($period !== 'discipline') {
                     if ($isPercentage && $value !== null && $value !== $this->defaultValue) {
-                        $disciplines[$discipline][$period] = $value / 100;
+                        $disciplines[$discipline][$period] = $value / $this->config['dataProcessing']['qualityDivider'];
                     } else {
                         $disciplines[$discipline][$period] = $value ?? $this->defaultValue;
                     }
@@ -337,13 +373,21 @@ class ExcelReportExporter extends ReportDataValidator
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
-        $sheet->getStyle("A1:{$lastColumn}2")->getFont()->setBold(true)->setSize(11);
+        $headerStyle = $this->config['styles']['header'];
+        $sheet->getStyle("A1:{$lastColumn}2")
+            ->getFont()
+            ->setBold($headerStyle['font']['bold'])
+            ->setSize($headerStyle['font']['size']);
+        $sheet->getStyle("A1:{$lastColumn}2")
+            ->getAlignment()
+            ->setHorizontal($headerStyle['alignment']['horizontal'])
+            ->setVertical($headerStyle['alignment']['vertical']);
 
         if ($isPercentage) {
             $percentageFormat = new Percentage();
             $lastRow = $sheet->getHighestRow();
             for ($i = 3; $i <= $lastRow; $i++) {
-                $sheet->getStyle("B{$i}:{$lastColumn}{$i}")
+                $sheet->getStyle("B$i:$lastColumn$i")
                     ->getNumberFormat()
                     ->setFormatCode($percentageFormat);
             }
@@ -397,7 +441,7 @@ class ExcelReportExporter extends ReportDataValidator
         $layout = $this->createChartLayout();
 
         return new Chart(
-            'Chart',
+            $this->config['chartSettings']['barChartName'],
             new Title($chartTitle),
             null,
             new PlotArea($layout, [$series]),
@@ -450,10 +494,10 @@ class ExcelReportExporter extends ReportDataValidator
 
         $dataSeriesValues = [];
         $row = $dataStartRow;
-        foreach ($disciplines as $discipline => $data) {
+        foreach ($disciplines as $ignored) {
             $dataSeriesValues[] = new DataSeriesValues(
                 DataSeriesValues::DATASERIES_TYPE_NUMBER,
-                "$sheetTitle!B{$row}:{$lastColumn}{$row}",
+                "$sheetTitle!B$row:$lastColumn$row",
                 null,
                 count($periods)
             );
@@ -469,12 +513,16 @@ class ExcelReportExporter extends ReportDataValidator
             $dataSeriesValues
         );
 
-        $legend = new Legend(Legend::POSITION_BOTTOM, null, false);
+        $legend = new Legend(
+            $this->config['chartSettings']['legend']['position'],
+            null,
+            $this->config['chartSettings']['legend']['showBorder']
+        );
         $title = new Title($chartTitle);
         $plotArea = new PlotArea(null, [$series]);
 
         return new Chart(
-            'chart_' . $sheetTitle,
+            $this->config['chartSettings']['clusteredChartNamePrefix'] . $sheetTitle,
             $title,
             $legend,
             $plotArea,
@@ -494,7 +542,7 @@ class ExcelReportExporter extends ReportDataValidator
     {
         $xAxis = new Axis();
         $xAxisText = new AxisText();
-        $xAxisText->setRotation(-45);
+        $xAxisText->setRotation($this->config['chartSettings']['xAxis']['textRotation']);
         $xAxis->setAxisText($xAxisText);
 
         return $xAxis;
@@ -509,7 +557,7 @@ class ExcelReportExporter extends ReportDataValidator
     {
         $yAxis = new Axis();
         $gridLines = new GridLines();
-        $gridLines->setLineColorProperties('d9d9d9');
+        $gridLines->setLineColorProperties($this->config['chartSettings']['yAxis']['gridLineColor']);
         $yAxis->setMajorGridlines($gridLines);
 
         return $yAxis;
@@ -523,7 +571,7 @@ class ExcelReportExporter extends ReportDataValidator
     private function createChartLayout(): Layout
     {
         $layout = new Layout();
-        $layout->setShowVal(true);
+        $layout->setShowVal($this->config['chartSettings']['layout']['showValues']);
 
         return $layout;
     }
@@ -541,7 +589,7 @@ class ExcelReportExporter extends ReportDataValidator
         $startColumnIndex = $tableColumnsCount + 1;
         $startColumn = $this->getColumnLetter($startColumnIndex);
 
-        $chartWidth = max($this->config['layout']['minChartWidthColumns'], $disciplineCount + 5);
+        $chartWidth = max($this->config['layout']['minChartWidthColumns'], $disciplineCount + $this->config['layout']['chartWidthPadding']);
         $endColumnIndex = $startColumnIndex + $chartWidth - 1;
         $endColumn = $this->getColumnLetter($endColumnIndex);
 
@@ -564,7 +612,7 @@ class ExcelReportExporter extends ReportDataValidator
      */
     private function calculatePeriodsChartPosition(string $lastColumn, int $disciplineCount, int $rowCount, int $periodCount): array
     {
-        $startColumnIndex = ord($lastColumn) - 65 + 2;
+        $startColumnIndex = ord($lastColumn) - 65 + $this->config['layout']['chartColumnOffset'];
         $chartStartColumn = $this->getColumnLetter($startColumnIndex);
         $tableWidth = $periodCount + 1;
         $chartWidth = max($this->config['layout']['minChartWidthColumns'], $tableWidth + $disciplineCount);
@@ -615,7 +663,7 @@ class ExcelReportExporter extends ReportDataValidator
         ];
 
         foreach ($overallResults as $row) {
-            $quality = $row['avgQuality'] !== null ? $row['avgQuality'] / 100 : $this->defaultValue;
+            $quality = $row['avgQuality'] !== null ? $row['avgQuality'] / $this->config['dataProcessing']['qualityDivider'] : $this->defaultValue;
             $sheetData[] = [
                 $row['discipline'],
                 $quality,
@@ -634,7 +682,7 @@ class ExcelReportExporter extends ReportDataValidator
      */
     private function fillSheetWithData(Worksheet $sheet, array $sheetData): void
     {
-        $sheet->fromArray($sheetData, null, 'A1');
+        $sheet->fromArray($sheetData);
 
         $columnCount = count($sheetData[0]);
 
@@ -644,12 +692,20 @@ class ExcelReportExporter extends ReportDataValidator
         }
 
         $lastColumnLetter = $this->getColumnLetter($columnCount - 1);
-        $sheet->getStyle("A1:{$lastColumnLetter}1")->getFont()->setBold(true)->setSize(11);
+        $headerStyle = $this->config['styles']['header'];
+        $sheet->getStyle("A1:{$lastColumnLetter}1")
+            ->getFont()
+            ->setBold($headerStyle['font']['bold'])
+            ->setSize($headerStyle['font']['size']);
+        $sheet->getStyle("A1:{$lastColumnLetter}1")
+            ->getAlignment()
+            ->setHorizontal($headerStyle['alignment']['horizontal'])
+            ->setVertical($headerStyle['alignment']['vertical']);
 
         for ($i = 2; $i <= count($sheetData); $i++) {
             if ($sheetData[$i - 1][1] !== $this->defaultValue) {
                 $percentageFormat = new Percentage();
-                $sheet->getCell("B{$i}")
+                $sheet->getCell("B$i")
                     ->getStyle()->getNumberFormat()
                     ->setFormatCode($percentageFormat);
             }
