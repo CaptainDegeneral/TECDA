@@ -162,8 +162,8 @@ class ReportController extends Controller
     public function export(ExportReportRequest $request): BinaryFileResponse|JsonResponse
     {
         try {
-            return ReportService::export($request->id);
-            //return ReportService::exportTest();
+            //return ReportService::export($request->id);
+            return ReportService::exportTest();
         } catch (Exception $e) {
             Log::critical($e->getMessage());
             return response()->json([

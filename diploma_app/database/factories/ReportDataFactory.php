@@ -18,6 +18,7 @@ class ReportDataFactory
         $faker = Faker::create('ru_RU');
 
         $disciplines = [];
+
         for ($i = 0; $i < $disciplineCount; $i++) {
             $disciplines[] = $faker->unique()->randomElement([
                 'Математика', 'Физика', 'Химия', 'Биология', 'История', 'География', 'Литература',
@@ -30,11 +31,13 @@ class ReportDataFactory
 
         $years = [];
         $startYear = 2018;
+
         for ($i = 0; $i < $yearCount; $i++) {
             $years[] = sprintf('%d-%d', $startYear + $i, $startYear + $i + 1);
         }
 
         $overallResults = [];
+
         foreach ($disciplines as $discipline) {
             $overallResults[] = [
                 'discipline' => $discipline,
@@ -44,20 +47,25 @@ class ReportDataFactory
         }
 
         $qualityTable = [];
+
         foreach ($disciplines as $discipline) {
             $row = ['discipline' => $discipline];
+
             foreach ($years as $year) {
-                $row[$year] = $faker->boolean(30) ? $faker->randomFloat(1, 30, 95) : null;
+                $row[$year] = $faker->boolean(80) ? $faker->randomFloat(1, 30, 95) : null;
             }
+
             $qualityTable[] = $row;
         }
 
         $averageScoreTable = [];
+
         foreach ($disciplines as $discipline) {
             $row = ['discipline' => $discipline];
             foreach ($years as $year) {
                 $row[$year] = $faker->boolean(80) ? $faker->randomFloat(1, 2.5, 5.0) : null;
             }
+
             $averageScoreTable[] = $row;
         }
 

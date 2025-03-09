@@ -2,7 +2,8 @@
 
 namespace App\Exports;
 
-use App\Abstracts\ReportDataValidator;
+use App\Contracts\ReportExporterInterface;
+use App\Services\ReportDataValidationService;
 use Exception;
 use InvalidArgumentException;
 use PhpOffice\PhpSpreadsheet\Chart\Axis;
@@ -24,13 +25,33 @@ use Throwable;
 
 /**
  * Класс для экспорта отчетов в формат Excel.
+ *
+ * Создает Excel-документ с таблицами и диаграммами на основе данных отчета.
+ * Использует библиотеку PhpSpreadsheet. Валидация данных выполняется с помощью сервиса
+ *  `ReportDataValidationService`.
+ *
+ * @property array $config Конфигурация стилей и параметров
+ * @property array $reportData Данные отчета
+ * @property ReportDataValidationService $validator Сервис валидации
+ * @property Spreadsheet $spreadsheet Экземпляр Spreadsheet
+ * @property string $defaultValue Значение по умолчанию ('-')
  */
-class ExcelReportExporter extends ReportDataValidator
+class ExcelReportExporter implements ReportExporterInterface
 {
     /**
      * @var array Настройки конфигурации экспорта
      */
     private array $config;
+
+    /**
+     * @var array Данные отчета
+     */
+    private array $reportData;
+
+    /**
+     * @var ReportDataValidationService Сервис валидации данных отчета
+     */
+    private ReportDataValidationService $validator;
 
     /**
      * @var Spreadsheet Экземпляр Spreadsheet
@@ -47,8 +68,10 @@ class ExcelReportExporter extends ReportDataValidator
      *
      * @param array $config Настройки для экспорта (опционально)
      */
-    public function __construct(array $config = [])
+    public function __construct(ReportDataValidationService $validator, array $config = [])
     {
+        $this->validator = $validator;
+
         $this->config = array_merge([
             'layout' => [
                 'minChartWidthColumns' => 10,
@@ -150,7 +173,7 @@ class ExcelReportExporter extends ReportDataValidator
     public function export(array $reportData): string
     {
         $this->reportData = $reportData;
-        $this->validateReportData();
+        $this->validator->validate($reportData);
 
         foreach ($this->config['chartTypes'] as $config) {
             $this->createChartResultsSheet(
@@ -715,22 +738,24 @@ class ExcelReportExporter extends ReportDataValidator
     /**
      * Фабричный метод для создания экспортера с настройками по умолчанию
      *
+     * @param ReportDataValidationService $validator Валидатор данных
      * @return self Новый экземпляр экспортера
      */
-    public static function create(): self
+    public static function create(ReportDataValidationService $validator): self
     {
-        return new self();
+        return new self($validator);
     }
 
     /**
      * Фабричный метод для экспорта с настройками по умолчанию
      *
+     * @param ReportDataValidationService $validator Валидатор данных
      * @param array $reportData Данные отчета
      * @return string Путь к временному файлу
      * @throws Exception При ошибке создания файла
      */
-    public static function exportDefault(array $reportData): string
+    public static function exportDefault(ReportDataValidationService $validator, array $reportData): string
     {
-        return new self()->export($reportData);
+        return new self($validator)->export($reportData);
     }
 }

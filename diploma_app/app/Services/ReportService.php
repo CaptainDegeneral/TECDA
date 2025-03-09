@@ -54,9 +54,9 @@ class ReportService
     /**
      * Экспортирует отчет в Word и Excel, возвращает архив.
      *
-     * @param int $reportId
-     * @return BinaryFileResponse
-     * @throws Exception
+     * @param int $reportId Идентификатор отчета
+     * @return BinaryFileResponse Ответ с ZIP-архивом
+     * @throws Exception Если экспорт не удался
      */
     public static function export(int $reportId): BinaryFileResponse
     {
@@ -65,33 +65,41 @@ class ReportService
         if (isset($report['data']) && is_string($report['data'])) {
             $decodedData = json_decode($report['data'], true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Invalid JSON data in report');
+                throw new Exception('Некорректные JSON-данные в отчете');
             }
             $report['data'] = $decodedData;
         }
 
         try {
-            return ReportExporter::export($report, $report['title']);
+            return ReportExporter::exportDefault($report, $report['title']);
         } catch (Exception $e) {
-            throw new Exception('Export failed: ' . $e->getMessage(), 0, $e);
+            throw new Exception(
+                'Не удалось экспортировать отчет: ' . $e->getMessage(),
+                0,
+                $e
+            );
         }
     }
 
     /**
      * Экспортирует тестовый отчет с предопределёнными данными.
      *
-     * @return BinaryFileResponse
-     * @throws Exception
+     * @return BinaryFileResponse Ответ с ZIP-архивом
+     * @throws Exception Если экспорт не удался
      */
     public static function exportTest(): BinaryFileResponse
     {
-        $testData = ReportDataFactory::getTestReportData(10, 3);
+        $testData = ReportDataFactory::getTestReportData(20, 5);
         $testTitle = ReportDataFactory::getTestReportTitle();
 
         try {
-            return ReportExporter::export($testData, $testTitle);
+            return ReportExporter::exportDefault($testData, $testTitle);
         } catch (Exception $e) {
-            throw new Exception('Test export failed: ' . $e->getMessage(), 0, $e);
+            throw new Exception(
+                'Не удалось экспортировать тестовый отчет: ' . $e->getMessage(),
+                0,
+                $e
+            );
         }
     }
 }

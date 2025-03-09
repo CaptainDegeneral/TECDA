@@ -2,7 +2,8 @@
 
 namespace App\Exports;
 
-use App\Abstracts\ReportDataValidator;
+use App\Contracts\ReportExporterInterface;
+use App\Services\ReportDataValidationService;
 use InvalidArgumentException;
 use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\Exception\Exception as PhpWordException;
@@ -13,13 +14,34 @@ use PhpOffice\PhpWord\Style\Tab;
 
 /**
  * Класс для экспорта отчетов в формат Word.
+ *
+ * Этот класс предназначен для создания документов Word на основе данных отчета.
+ * Он использует библиотеку PhpWord для генерации документа, включая стили,
+ * таблицы и текстовые блоки. Валидация данных выполняется с помощью сервиса
+ * `ReportDataValidationService`.
+ *
+ * @property array $config Конфигурация стилей и параметров документа
+ * @property array $reportData Данные отчета для заполнения документа
+ * @property ReportDataValidationService $validator Сервис валидации данных
+ * @property PhpWord $phpWord Экземпляр PhpWord для работы с документом
+ * @property string $defaultValue Значение по умолчанию для пустых ячеек ('-')
  */
-class WordReportExporter extends ReportDataValidator
+class WordReportExporter implements ReportExporterInterface
 {
     /**
      * @var array Настройки конфигурации экспорта
      */
     private array $config;
+
+    /**
+     * @var array Данные отчета
+     */
+    private array $reportData;
+
+    /**
+     * @var ReportDataValidationService Сервис валидации данных отчета
+     */
+    private ReportDataValidationService $validator;
 
     /**
      * @var PhpWord Экземпляр PhpWord
@@ -36,8 +58,10 @@ class WordReportExporter extends ReportDataValidator
      *
      * @param array $config Настройки для экспорта (опционально)
      */
-    public function __construct(array $config = [])
+    public function __construct(ReportDataValidationService $validator, array $config = [])
     {
+        $this->validator = $validator;
+
         $this->config = array_merge([
             'styles' => [
                 'title' => [
@@ -180,7 +204,7 @@ class WordReportExporter extends ReportDataValidator
     public function export(array $reportData): string
     {
         $this->reportData = $reportData;
-        $this->validateReportData();
+        $this->validator->validate($reportData);
         $section = $this->phpWord->addSection($this->config['margins']);
         $this->generateReport($section);
 
@@ -392,22 +416,24 @@ class WordReportExporter extends ReportDataValidator
     /**
      * Фабричный метод для создания экспортера с настройками по умолчанию
      *
+     * @param ReportDataValidationService $validator Валидатор данных
      * @return self
      */
-    public static function create(): self
+    public static function create(ReportDataValidationService $validator): self
     {
-        return new self();
+        return new self($validator);
     }
 
     /**
      * Фабричный метод для экспорта с настройками по умолчанию
      *
+     * @param ReportDataValidationService $validator Валидатор данных
      * @param array $reportData Данные отчета
      * @return string Путь к временному файлу
      * @throws PhpWordException
      */
-    public static function exportDefault(array $reportData): string
+    public static function exportDefault(ReportDataValidationService $validator, array $reportData): string
     {
-        return new self()->export($reportData);
+        return new self($validator)->export($reportData);
     }
 }
