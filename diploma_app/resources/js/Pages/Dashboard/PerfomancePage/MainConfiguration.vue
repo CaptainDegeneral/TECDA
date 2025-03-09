@@ -56,27 +56,21 @@ const semesterTableHeaders = [
             class="mt-6"
         >
             <SemesterTable
-                :rows="tab.autumnWinter"
+                v-for="semester in ['autumnWinter', 'springSummer']"
+                :key="semester"
+                :rows="tabsData[activeTab][semester]"
                 :tabIndex="tabIndex"
-                semesterKey="autumnWinter"
+                :semesterKey="semester"
                 :disciplines="disciplines"
                 :tableHeaders="semesterTableHeaders"
-                @addRow="emit('addRow', 'autumnWinter', tabIndex)"
+                @addRow="emit('addRow', semester, tabIndex)"
                 @deleteRow="handleDelete"
             >
-                <template #title>Осенне-зимний семестр</template>
-            </SemesterTable>
-
-            <SemesterTable
-                :rows="tab.springSummer"
-                :tabIndex="tabIndex"
-                semesterKey="springSummer"
-                :disciplines="disciplines"
-                :tableHeaders="semesterTableHeaders"
-                @addRow="emit('addRow', 'springSummer', tabIndex)"
-                @deleteRow="handleDelete"
-            >
-                <template #title>Весенне-летний семестр</template>
+                <template #title>{{
+                    semester === 'autumnWinter'
+                        ? 'Осенне-зимний семестр'
+                        : 'Весенне-летний семестр'
+                }}</template>
             </SemesterTable>
         </div>
     </section>

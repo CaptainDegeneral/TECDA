@@ -1,4 +1,6 @@
 <script setup>
+import ResultTable from '@/Pages/Dashboard/PerfomancePage/ResultTable.vue';
+
 const props = defineProps({
     tabsData: Array,
     finalResults: Object,
@@ -24,120 +26,24 @@ const emit = defineEmits(['toggleFinalResults']);
         </div>
         <transition name="fade">
             <div class="mb-6" v-if="showFinalResults">
-                <div class="mb-6">
-                    <h3 class="mb-4 text-lg font-medium text-gray-700">
-                        Успеваемость
-                    </h3>
-                    <table class="table w-full">
-                        <thead>
-                            <tr>
-                                <th class="w-1/3">Дисциплина</th>
-                                <th
-                                    v-for="tab in tabsData"
-                                    :key="tab.label"
-                                    class="w-[calc(66.66%/5)]"
-                                >
-                                    {{ tab.label }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="row in finalResults.performanceTable"
-                                :key="row.discipline"
-                            >
-                                <td class="w-1/3">{{ row.discipline }}</td>
-                                <td
-                                    v-for="tab in tabsData"
-                                    :key="tab.label"
-                                    class="w-[calc(66.66%/5)]"
-                                >
-                                    {{
-                                        row[tab.label] !== null
-                                            ? row[tab.label]
-                                            : '—'
-                                    }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mb-6">
-                    <h3 class="mb-4 text-lg font-medium text-gray-700">
-                        Качество образования
-                    </h3>
-                    <table class="table w-full">
-                        <thead>
-                            <tr>
-                                <th class="w-1/3">Дисциплина</th>
-                                <th
-                                    v-for="tab in tabsData"
-                                    :key="tab.label"
-                                    class="w-[calc(66.66%/5)]"
-                                >
-                                    {{ tab.label }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="row in finalResults.qualityTable"
-                                :key="row.discipline"
-                            >
-                                <td class="w-1/3">{{ row.discipline }}</td>
-                                <td
-                                    v-for="tab in tabsData"
-                                    :key="tab.label"
-                                    class="w-[calc(66.66%/5)]"
-                                >
-                                    {{
-                                        row[tab.label] !== null
-                                            ? row[tab.label]
-                                            : '—'
-                                    }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mb-6">
-                    <h3 class="mb-4 text-lg font-medium text-gray-700">
-                        Средний балл
-                    </h3>
-                    <table class="table w-full">
-                        <thead>
-                            <tr>
-                                <th class="w-1/3">Дисциплина</th>
-                                <th
-                                    v-for="tab in tabsData"
-                                    :key="tab.label"
-                                    class="w-[calc(66.66%/5)]"
-                                >
-                                    {{ tab.label }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="row in finalResults.averageScoreTable"
-                                :key="row.discipline"
-                            >
-                                <td class="w-1/3">{{ row.discipline }}</td>
-                                <td
-                                    v-for="tab in tabsData"
-                                    :key="tab.label"
-                                    class="w-[calc(66.66%/5)]"
-                                >
-                                    {{
-                                        row[tab.label] !== null
-                                            ? row[tab.label]
-                                            : '—'
-                                    }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <ResultTable
+                    title="Успеваемость"
+                    :data="finalResults.performanceTable"
+                    :columns="tabsData"
+                />
+
+                <ResultTable
+                    title="Качество знаний"
+                    :data="finalResults.qualityTable"
+                    :columns="tabsData"
+                />
+
+                <ResultTable
+                    title="Средний балл"
+                    :data="finalResults.averageScoreTable"
+                    :columns="tabsData"
+                />
+
                 <div>
                     <h3 class="mb-4 text-lg font-medium text-gray-700">
                         Средние значения за все периоды
