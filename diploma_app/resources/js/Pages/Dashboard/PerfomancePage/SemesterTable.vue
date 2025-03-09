@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, watch } from 'vue';
+import { defineProps, defineEmits, watch, onMounted } from 'vue';
 import SelectSearch from '@/Components/SelectSearch.vue';
 import {
     calculateTotalGrades,
@@ -48,10 +48,8 @@ const checkGradesExceedStudents = (row) => {
         const disciplineName =
             row.discipline.code_name || 'Неизвестная дисциплина';
         const groupName = row.group || 'Неизвестная группа';
-        addNotification(
-            'warning',
-            `Внимание! В группе "${groupName}" по дисциплине "${disciplineName}" количество оценок (${totalGrades}) превышает количество студентов (${students}).`,
-        );
+        const message = `Внимание! В группе "${groupName}" по дисциплине "${disciplineName}" количество оценок (${totalGrades}) превышает количество студентов (${students}).`;
+        addNotification('warning', message);
     }
 };
 
