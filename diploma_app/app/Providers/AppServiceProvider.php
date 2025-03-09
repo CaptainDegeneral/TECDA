@@ -12,11 +12,11 @@ use Illuminate\Support\ServiceProvider;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Регистрация сервисов в контейнере.
      */
     public function register(): void
     {
-        //
+
     }
 
     /**

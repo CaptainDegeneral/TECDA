@@ -17,7 +17,6 @@ use PhpOffice\PhpSpreadsheet\Chart\Legend;
 use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
 use PhpOffice\PhpSpreadsheet\Chart\Title;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat\Wizard\Percentage;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -38,29 +37,10 @@ use Throwable;
  */
 class ExcelReportExporter implements ReportExporterInterface
 {
-    /**
-     * @var array Настройки конфигурации экспорта
-     */
     private array $config;
-
-    /**
-     * @var array Данные отчета
-     */
     private array $reportData;
-
-    /**
-     * @var ReportDataValidationService Сервис валидации данных отчета
-     */
     private ReportDataValidationService $validator;
-
-    /**
-     * @var Spreadsheet Экземпляр Spreadsheet
-     */
     private Spreadsheet $spreadsheet;
-
-    /**
-     * @var string Значение по умолчанию для пустых ячеек
-     */
     private string $defaultValue = '-';
 
     /**
@@ -72,84 +52,7 @@ class ExcelReportExporter implements ReportExporterInterface
     {
         $this->validator = $validator;
 
-        $this->config = array_merge([
-            'layout' => [
-                'minChartWidthColumns' => 10,
-                'minChartEndRow' => 25,
-                'chartStartRow' => 2,
-                'chartWidthPadding' => 5,
-                'chartColumnOffset' => 2,
-            ],
-            'chartTypes' => [
-                'quality' => [
-                    'sheetTitle' => 'QualityResults',
-                    'chartTitle' => 'Уровень качества знаний',
-                    'dataRange' => '$B$2:$B$',
-                    'categoryRange' => '$A$2:$A$',
-                ],
-                'averageScore' => [
-                    'sheetTitle' => 'AverageScoreResults',
-                    'chartTitle' => 'Средний балл',
-                    'dataRange' => '$C$2:$C$',
-                    'categoryRange' => '$A$2:$A$',
-                ],
-            ],
-            'periodsChartTypes' => [
-                'quality' => [
-                    'sheetTitle' => 'QualityPerPeriods',
-                    'chartTitle' => 'Уровень качества знаний по годам',
-                    'isPercentage' => true,
-                    'tableTitle' => 'Уровень качества знаний',
-                    'tableKey' => 'qualityTable',
-                ],
-                'averageScore' => [
-                    'sheetTitle' => 'AverageScorePerPeriods',
-                    'chartTitle' => 'Средний балл по годам',
-                    'isPercentage' => false,
-                    'tableTitle' => 'Средний балл',
-                    'tableKey' => 'averageScoreTable',
-                ],
-            ],
-            'overallTablesHeaders' => [
-                'discipline' => 'Дисциплина',
-                'quality' => 'Уровень качества знаний',
-                'averageScore' => 'Средний балл',
-            ],
-            'styles' => [
-                'header' => [
-                    'font' => [
-                        'bold' => true,
-                        'size' => 11
-                    ],
-                    'alignment' => [
-                        'horizontal' => Alignment::HORIZONTAL_CENTER,
-                        'vertical' => Alignment::VERTICAL_CENTER,
-                    ],
-                ],
-            ],
-            'chartSettings' => [
-                'barChartName' => 'Chart',
-                'clusteredChartNamePrefix' => 'chart_',
-                'xAxis' => [
-                    'textRotation' => -45,
-                ],
-                'yAxis' => [
-                    'gridLineColor' => 'd9d9d9',
-                ],
-                'layout' => [
-                    'showValues' => true,
-                ],
-                'legend' => [
-                    'position' => Legend::POSITION_BOTTOM,
-                    'showBorder' => false,
-                ],
-                'dataStartRow' => 3,
-            ],
-            'dataProcessing' => [
-                'qualityDivider' => 100,
-                'disciplineColumnTitle' => 'Дисциплина',
-            ],
-        ], $config);
+        $this->config = array_merge(config('excel', []), $config);
 
         $this->initSpreadsheet();
     }

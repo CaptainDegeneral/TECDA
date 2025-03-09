@@ -9,7 +9,6 @@ use PhpOffice\PhpWord\Element\Section;
 use PhpOffice\PhpWord\Exception\Exception as PhpWordException;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
-use PhpOffice\PhpWord\SimpleType\Jc;
 use PhpOffice\PhpWord\Style\Tab;
 
 /**
@@ -28,29 +27,10 @@ use PhpOffice\PhpWord\Style\Tab;
  */
 class WordReportExporter implements ReportExporterInterface
 {
-    /**
-     * @var array Настройки конфигурации экспорта
-     */
     private array $config;
-
-    /**
-     * @var array Данные отчета
-     */
     private array $reportData;
-
-    /**
-     * @var ReportDataValidationService Сервис валидации данных отчета
-     */
     private ReportDataValidationService $validator;
-
-    /**
-     * @var PhpWord Экземпляр PhpWord
-     */
     private PhpWord $phpWord;
-
-    /**
-     * @var string Значение по умолчанию для пустых ячеек
-     */
     private string $defaultValue = '-';
 
     /**
@@ -62,121 +42,7 @@ class WordReportExporter implements ReportExporterInterface
     {
         $this->validator = $validator;
 
-        $this->config = array_merge([
-            'styles' => [
-                'title' => [
-                    'bold' => true,
-                    'size' => 14,
-                    'name' => 'Times New Roman'
-                ],
-                'subtitle' => [
-                    'size' => 12,
-                    'name' => 'Times New Roman'
-                ],
-                'table' => [
-                    'borderSize' => 6,
-                    'borderColor' => '000000',
-                    'cellMargin' => 80,
-                    'width' => 9355.5,
-                    'unit' => 'dxa',
-                ],
-                'header' => [
-                    'bold' => true,
-                    'valign' => 'center',
-                    'align' => 'center',
-                    'size' => 11,
-                ],
-                'cell' => [
-                    'valign' => 'center',
-                    'size' => 11,
-                ],
-                'description' => [
-                    'font' => [
-                        'size' => 11,
-                        'name' => 'Times New Roman'
-                    ],
-                    'paragraph' => [
-                        'alignment' => Jc::BOTH,
-                        'indentation' => [
-                            'firstLine' => 425.25
-                        ],
-                        'tabs' => [
-                            [
-                                'type' => 'left',
-                                'position' => 850.
-                            ]
-                        ],
-                    ],
-                ],
-                'averageScoreText' => [
-                    'font' => [
-                        'size' => 11,
-                        'name' => 'Times New Roman',
-                        'lineHeight' => 1.0,
-                        'spaceBefore' => 0,
-                        'spaceAfter' => 0
-                    ],
-                    'paragraph' => [
-                        'indentation' => [
-                            'firstLine' => 425.25
-                        ],
-                        'alignment' => Jc::BOTH,
-                    ],
-                ],
-                'qualityText' => [
-                    'font' => [
-                        'size' => 11,
-                        'name' => 'Times New Roman',
-                        'lineHeight' => 1.0,
-                        'spaceBefore' => 0,
-                        'spaceAfter' => 0
-                    ],
-                    'paragraph' => [
-                        'indentation' => [
-                            'firstLine' => 425.25
-                        ],
-                        'alignment' => Jc::BOTH,
-                    ],
-                ],
-            ],
-            'tableConfig' => [
-                'disciplineWidth' => 4000,
-            ],
-            'text' => [
-                'title' => 'Результаты промежуточной аттестации',
-                'teacherPrefix' => 'Преподаватель ',
-                'description' => 'Результаты освоения обучающимися образовательных программ по итогам мониторингов, проводимых организацией (качество знаний с учетом статуса образовательной организации)',
-                'averageScore' => 'По результатам промежуточной аттестации за межаттестационный период средний балл обучающихся составил:',
-                'quality' => 'По результатам промежуточной аттестации за межаттестационный период качество знаний обучающихся составило:',
-            ],
-            'margins' => [
-                'marginTop'    => 1134,
-                'marginBottom' => 1134,
-                'marginLeft'   => 1701,
-                'marginRight'  => 850.5,
-            ],
-            'numberingStyle' => [
-                'type' => 'multilevel',
-                'levels' => [
-                    [
-                        'format' => 'decimal',
-                        'text' => '%1.',
-                        'left' => 360,
-                        'hanging' => 360
-                    ],
-                    [
-                        'format' => 'decimal',
-                        'text' => '%1.%2.',
-                        'left' => 480,
-                        'hanging' => 480
-                    ],
-                ],
-            ],
-            'emptyLine' => [
-                'defaultHeight' => 1.15,
-                'tableSpacer' => 1.0,
-            ],
-        ], $config);
+        $this->config = array_merge(config('word', []), $config);
 
         $this->initPhpWord();
     }
@@ -186,11 +52,20 @@ class WordReportExporter implements ReportExporterInterface
      */
     private function initPhpWord(): void
     {
+        $defaultStyles = $this->config['styles']['default'];
+
         $this->phpWord = new PhpWord();
-        $this->phpWord->setDefaultParagraphStyle(['spaceBefore' => 0, 'spaceAfter' => 0]);
-        $this->phpWord->setDefaultFontName('Times New Roman');
-        $this->phpWord->setDefaultFontSize(11);
-        $this->phpWord->addNumberingStyle('multilevel', $this->config['numberingStyle']);
+
+        $this->phpWord->setDefaultParagraphStyle([
+            'spaceBefore' => $defaultStyles['spaceBefore'],
+            'spaceAfter' => $defaultStyles['spaceAfter'],
+        ]);
+
+        $this->phpWord->setDefaultFontName($defaultStyles['fontName']);
+
+        $this->phpWord->setDefaultFontSize($defaultStyles['fontSize']);
+
+        $this->phpWord->addNumberingStyle($defaultStyles['numberingStyleName'], $this->config['numberingStyle']);
     }
 
     /**
