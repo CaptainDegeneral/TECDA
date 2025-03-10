@@ -2,6 +2,7 @@
 <script setup>
 import { ref } from 'vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import VActionButton from '@/Components/VActionButton.vue';
 
 const props = defineProps({
     category: String,

@@ -1,17 +1,15 @@
 <script setup>
 import Modal from '@/Components/Modal.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import DangerButton from '@/Components/DangerButton.vue';
+import VActionButton from '@/Components/VActionButton.vue';
 import ReportTable from '@/Components/Reports/ReportTable.vue';
 import OverallResultsTable from '@/Components/Reports/OverallResultsTable.vue';
 import { computed, ref, watch } from 'vue';
-import { getReport, exportReport } from '@/api/reports.js';
+import { getReport, exportReport, deleteReport } from '@/api/reports.js';
 import NProgress from 'nprogress';
 import { useNotificationStore } from '@/Store/NotificationStore.js';
 import { usePage } from '@inertiajs/vue3';
 
-const emit = defineEmits(['closeModal', 'created']);
+const emit = defineEmits(['closeModal', 'created', 'deleted']);
 
 const props = defineProps({
     id: { required: true },
@@ -27,6 +25,10 @@ const user = computed(() => page.props.auth.user);
 const report = ref(null);
 const loading = ref(false);
 const downloading = ref(false);
+const deleting = ref(false);
+
+const titleMain = computed(() => report.value?.title.split(' от ')[0] || '');
+const titleDate = computed(() => report.value?.title.split(' от ')[1] || '');
 
 const reportData = computed(() => {
     if (report.value && report.value.data) {
@@ -59,7 +61,6 @@ const getReportData = async () => {
     try {
         NProgress.start();
         loading.value = true;
-
         const { data } = await getReport(props.id);
         report.value = data;
     } catch (exception) {
@@ -82,6 +83,22 @@ const downloadReport = async () => {
     }
 };
 
+const deleteReportAction = async () => {
+    deleting.value = true;
+    try {
+        const response = await deleteReport(props.id);
+        if (response.data.success) {
+            addNotification('success', 'Отчет успешно удален');
+            emit('deleted');
+            closeModal();
+        }
+    } catch (error) {
+        addNotification('error', 'Ошибка при удалении отчета');
+    } finally {
+        deleting.value = false;
+    }
+};
+
 const closeModal = () => {
     emit('closeModal');
 };
@@ -101,10 +118,15 @@ watch(
     <modal :show="show" max-width="3xl">
         <div v-if="report" class="p-6">
             <section>
-                <div class="mb-6 flex flex-row items-center justify-between">
-                    <h2 class="text-2xl font-semibold text-gray-900">
-                        {{ report.title }}
-                    </h2>
+                <div class="mb-6 flex flex-row items-start justify-between">
+                    <div class="flex flex-col items-start">
+                        <h2 class="text-2xl font-semibold text-gray-900">
+                            {{ titleMain }}
+                        </h2>
+                        <h3 class="text-xl font-medium text-gray-500">
+                            ({{ titleDate }})
+                        </h3>
+                    </div>
                     <div class="flex flex-row items-center space-x-3">
                         <svg
                             v-if="downloading"
@@ -127,18 +149,24 @@ watch(
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                         </svg>
-                        <primary-button
-                            @click="downloadReport"
+                        <VActionButton
+                            type="download"
                             :disabled="downloading"
-                        >
-                            {{ downloading ? 'Скачивание...' : 'Скачать' }}
-                        </primary-button>
-                        <danger-button v-if="user.role_id === 1" @click="">
-                            Удалить
-                        </danger-button>
-                        <secondary-button @click="closeModal">
-                            Отмена
-                        </secondary-button>
+                            @click="downloadReport"
+                            class="min-w-32"
+                        />
+                        <VActionButton
+                            v-if="user.role_id === 1"
+                            type="delete"
+                            :disabled="deleting"
+                            @click="deleteReportAction"
+                            class="min-w-32"
+                        />
+                        <VActionButton
+                            type="close"
+                            @click="closeModal"
+                            class="min-w-32"
+                        />
                     </div>
                 </div>
                 <div class="overflow-x-auto">

@@ -138,7 +138,7 @@ const saveReport = async () => {
         const response = await createReport(
             null,
             collectedData.value,
-            'Успеваемость и качество образования',
+            'Успеваемость, средний балл и качество знаний',
         );
         chosenReportId.value = response.data.data.report.id;
         showReportLink.value = true;

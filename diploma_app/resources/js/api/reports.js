@@ -70,9 +70,14 @@ const exportReport = async (reportId) => {
 
         return { success: true };
     } catch (error) {
-        console.error('Ошибка при скачивании отчета:', error);
         throw error;
     }
 };
+const deleteReport = async (reportId) => {
+    const response = await axios.delete(
+        route('report.destroy', { report: reportId }),
+    );
+    return response.data;
+};
 
-export { createReport, exportReport, getReport, getReportsList };
+export { createReport, deleteReport, exportReport, getReport, getReportsList };

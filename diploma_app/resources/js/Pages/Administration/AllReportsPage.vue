@@ -59,6 +59,10 @@ const closeReport = () => {
     chosenReportId.value = null;
 };
 
+const handleReportDeleted = () => {
+    search();
+};
+
 const search = async () => {
     currentPage.value = 1;
     await getReports();
@@ -122,6 +126,7 @@ onMounted(getReports);
         :id="chosenReportId"
         :show="showReportModal"
         @close-modal="closeReport"
+        @deleted="handleReportDeleted"
     />
 </template>
 

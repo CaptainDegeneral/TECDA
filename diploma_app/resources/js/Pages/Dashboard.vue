@@ -8,7 +8,7 @@ import OtherPage from '@/Pages/Dashboard/OtherPage.vue';
 const reports = [
     {
         key: 'performance',
-        title: 'Успеваемость и качество образования',
+        title: 'Успеваемость, средний балл и качество знаний',
         component: PerformancePage,
     },
     {
