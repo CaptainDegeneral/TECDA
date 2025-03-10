@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, watch, onMounted } from 'vue';
+import { defineProps, defineEmits, watch } from 'vue';
 import SelectSearch from '@/Components/SelectSearch.vue';
 import {
     calculateTotalGrades,

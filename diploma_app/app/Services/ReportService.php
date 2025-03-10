@@ -82,14 +82,27 @@ class ReportService
     }
 
     /**
-     * Экспортирует тестовый отчет с предопределёнными данными.
+     * Экспортирует тестовый отчет с использованием фабрики данных.
      *
      * @return BinaryFileResponse Ответ с ZIP-архивом
      * @throws Exception Если экспорт не удался
      */
     public static function exportTest(): BinaryFileResponse
     {
-        $testData = ReportDataFactory::getTestReportData(20, 5);
+        $testConfig = [
+            'disciplineCount' => 20,
+            'yearCount' => 5,
+            'codeAdditionalProbability' => 0.2,
+            'useDynamicDisciplines' => false,
+        ];
+
+        $testData = ReportDataFactory::getTestReportData(
+            $testConfig['disciplineCount'],
+            $testConfig['yearCount'],
+            $testConfig['codeAdditionalProbability'],
+            $testConfig['useDynamicDisciplines']
+        );
+
         $testTitle = ReportDataFactory::getTestReportTitle();
 
         try {
