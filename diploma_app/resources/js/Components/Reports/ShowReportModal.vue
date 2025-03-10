@@ -28,10 +28,10 @@ const report = ref(null);
 const loading = ref(false);
 const downloading = ref(false);
 
-const parsedData = computed(() => {
+const reportData = computed(() => {
     if (report.value && report.value.data) {
         try {
-            return JSON.parse(report.value.data);
+            return report.value.data;
         } catch (e) {
             addNotification('error', 'Ошибка при обработке данных отчета');
             return {};
@@ -40,8 +40,8 @@ const parsedData = computed(() => {
     return {};
 });
 
-const finalResults = computed(() => parsedData.value.finalResults || {});
-const overallResults = computed(() => parsedData.value.overallResults || []);
+const finalResults = computed(() => reportData.value.finalResults || {});
+const overallResults = computed(() => reportData.value.overallResults || []);
 
 const years = computed(() => {
     if (

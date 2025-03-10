@@ -118,7 +118,7 @@ onMounted(getReports);
 
     <v-not-found v-else></v-not-found>
 
-    <show-report-modal
+    <ShowReportModal
         :id="chosenReportId"
         :show="showReportModal"
         @close-modal="closeReport"

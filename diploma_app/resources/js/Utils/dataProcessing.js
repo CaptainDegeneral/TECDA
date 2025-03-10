@@ -155,5 +155,5 @@ export const collectReportData = (
         finalResults: formatDecimalValues(finalResults),
         overallResults: formatDecimalValues(overallResults),
     };
-    return JSON.stringify(sanitizeData(data), null, 2);
+    return JSON.stringify(sanitizeData(data));
 };

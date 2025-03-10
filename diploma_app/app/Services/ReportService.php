@@ -25,10 +25,7 @@ class ReportService
         return ReportRepository::create([
             'title' => "Отчет \"$request->name\" от $formattedDate",
             'name' => $request->name,
-            'data' => json_encode(
-                $request->data,
-                JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION,
-            ),
+            'data' => $request->data,
             'user_id' => $request->user_id ?? auth()->id(),
         ]);
     }
